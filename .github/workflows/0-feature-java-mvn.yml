@@ -52,6 +52,7 @@ jobs:
         run: mvn verify sonar:sonar \
           -Dsonar.projectKey=${{ inputs.project-name }} \
           -Dsonar.token=$SONAR_TOKEN
+          -Dsonar.organization="kubernetes-labs"
 
   open-pr:
     needs: build-and-analyze
