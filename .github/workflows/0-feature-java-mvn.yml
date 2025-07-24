@@ -13,8 +13,10 @@ on:
         required: true
 
 jobs:
-  build_and_test:
-    runs-on: ubuntu-latest   
+  build-and-analyze:
+    runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}   
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
@@ -34,13 +36,7 @@ jobs:
             maven-${{ runner.os }}-
 
       - name: 📦 Build com Maven
-        run: mvn clean test package --no-transfer-progress
-
-  analyze:
-    runs-on: ubuntu-latest
-    env:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}    
-    steps:
+        run: mvn clean install --no-transfer-progress
 
       - name: 🧪 Lint da imagem com Hadolint
         uses: tmknom/secure-hadolint-action@v0.4.2
@@ -53,12 +49,12 @@ jobs:
       #    exit-code: '1'
 
       - name: 🔍 Análise Sonar
-        run: mvn clean install verify sonar:sonar \
+        run: mvn verify sonar:sonar \
           -Dsonar.projectKey=${{ inputs.project-name }} \
           -Dsonar.token=$SONAR_TOKEN
 
   open-pr:
-    needs: analyze
+    needs: build-and-analyze
     if: ${{ startsWith(github.ref, 'refs/heads/feature/') }}
     runs-on: ubuntu-latest
     steps:
