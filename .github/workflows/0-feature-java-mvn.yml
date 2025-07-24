@@ -11,12 +11,15 @@ on:
         required: true
       SONAR_TOKEN:
         required: true
+      SONAR_KEY:
+        required: true
 
 jobs:
   build-and-analyze:
     runs-on: ubuntu-latest
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}   
+      SONAR_KEY: ${{ secrets.SONAR_KEY }}       
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
@@ -51,8 +54,9 @@ jobs:
       - name: 🔍 Análise Sonar
         run: mvn verify sonar:sonar \
           -Dsonar.projectKey=${{ inputs.project-name }} \
-          -Dsonar.token=$SONAR_TOKEN
-          -Dsonar.organization="kubernetes-labs"
+          -Dsonar.token=$SONAR_TOKEN \
+          -Dsonar.organization="kubernetes-labs" \
+          -Dsonar.key=$SONAR_KEY
 
   open-pr:
     needs: build-and-analyze
