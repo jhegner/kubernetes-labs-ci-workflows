@@ -57,24 +57,3 @@ jobs:
 
       - name: 🔍 Análise Sonar
         run: mvn verify sonar:sonar -Dsonar.login=$SONAR_TOKEN -Dsonar.organization="kubernetes-labs" -Dsonar.projectKey=$SONAR_KEY
-  
-  open-pr:
-    runs-on: ubuntu-latest
-    needs: [build-and-analyze]
-    if: ${{ success() }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Open PR to develop
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GH_TOKEN }}
-          base: develop
-          branch: ${{ github.ref_name }}
-          title: 'Merge ${{ github.ref_name }} into develop'
-          body: |
-            ✅ Build, Lint, Security Scan, and Sonar passed.
-            🔄 Auto-generated pull request.
-          draft: false
-
-
