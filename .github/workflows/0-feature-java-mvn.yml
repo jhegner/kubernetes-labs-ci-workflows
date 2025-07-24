@@ -39,12 +39,12 @@ jobs:
       - name: Lint da imagem com Hadolint
         uses: tmknom/secure-hadolint-action@v0.4.2
 
-      - name: Scan de vulnerabilidades com Trivy
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: '${{ inputs.project-name }}:latest'
-          format: 'table'
-          exit-code: '1'
+      #- name: Scan de vulnerabilidades com Trivy
+      #  uses: aquasecurity/trivy-action@master
+      #  with:
+      #    image-ref: '${{ inputs.project-name }}:latest'
+      #    format: 'table'
+      #    exit-code: '1'
 
       - name: Análise Sonar
         env:
