@@ -52,10 +52,7 @@ jobs:
       #    exit-code: '1'
 
       - name: 🔍 Análise Sonar
-        run: mvn verify sonar:sonar \
-          -Dsonar.projectKey=$SONAR_KEY \
-          -Dsonar.login=$SONAR_TOKEN \
-          -Dsonar.organization=kubernetes-labs
+        run: mvn verify sonar:sonar -Dsonar.login=$SONAR_TOKEN -Dsonar.organization="kubernetes-labs" -Dsonar.projectKey="kubernetes-labs_projects_analyze"  
 
   open-pr:
     needs: build-and-analyze
