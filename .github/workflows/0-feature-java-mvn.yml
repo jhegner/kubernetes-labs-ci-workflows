@@ -6,11 +6,10 @@ on:
       project-name:
         required: true
         type: string
-      sonar-token:
-        required: true
-        type: string
     secrets:
       github-token:
+        required: true
+      sonar-token:
         required: true
 
 jobs:
