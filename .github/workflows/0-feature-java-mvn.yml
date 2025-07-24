@@ -1,4 +1,4 @@
-name: CI Feature Workflow
+name: CI Feature Workflow Java Maven
 
 on:
   workflow_call:
