@@ -47,9 +47,11 @@ jobs:
       #    exit-code: '1'
 
       - name: 🔍 Análise Sonar
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: mvn verify sonar:sonar \
           -Dsonar.projectKey=${{ inputs.project-name }} \
-          -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+          -Dsonar.login=$SONAR_TOKEN
 
   open-pr:
     needs: build-and-analyze
