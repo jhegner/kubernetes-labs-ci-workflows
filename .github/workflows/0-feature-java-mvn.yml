@@ -53,10 +53,9 @@ jobs:
 
       - name: 🔍 Análise Sonar
         run: mvn verify sonar:sonar \
-          -Dsonar.projectKey=${{ inputs.project-name }} \
-          -Dsonar.token=$SONAR_TOKEN \
+          -Dsonar.projectKey=$SONAR_KEY \
+          -Dsonar.login=$SONAR_TOKEN \
           -Dsonar.organization="kubernetes-labs" \
-          -Dsonar.key=$SONAR_KEY
 
   open-pr:
     needs: build-and-analyze
