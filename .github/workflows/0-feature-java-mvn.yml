@@ -33,10 +33,10 @@ jobs:
           restore-keys: |
             maven-${{ runner.os }}-
 
-      - name: Build com Maven
+      - name: 📦 Build com Maven
         run: mvn clean install --no-transfer-progress
 
-      - name: Lint da imagem com Hadolint
+      - name: 🧪 Lint da imagem com Hadolint
         uses: tmknom/secure-hadolint-action@v0.4.2
 
       #- name: Scan de vulnerabilidades com Trivy
