@@ -1,5 +1,4 @@
 name: CI Feature Workflow Java Maven
-
 on:
   workflow_call:
     inputs:
@@ -13,26 +12,22 @@ on:
         required: true
       SONAR_KEY:
         required: true
-
+permissions:
+  pull-requests: write
 jobs:
   build-and-analyze:
     runs-on: ubuntu-latest
-    outputs:
-      sonar-status: ${{ steps.sonar_scan.outputs.quality_gate_status }}
-
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       SONAR_KEY: ${{ secrets.SONAR_KEY }}
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
-
       - name: Setup JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: corretto
           java-version: 21
-
       - name: Cache Maven
         uses: actions/cache@v3
         with:
@@ -40,10 +35,8 @@ jobs:
           key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             maven-${{ runner.os }}-
-
       - name: 📦 Build com Maven
         run: mvn clean install --no-transfer-progress
-
       - name: 🧪 Lint da imagem com Hadolint
         uses: tmknom/secure-hadolint-action@v0.4.2
 
@@ -53,34 +46,29 @@ jobs:
       #    image-ref: '${{ inputs.project-name }}:latest'
       #    format: 'table'
       #    exit-code: '1'
-
       - name: 🔍 Análise Sonar
         # run: mvn verify sonar:sonar -Dsonar.login=$SONAR_TOKEN -Dsonar.organization="kubernetes-labs" -Dsonar.projectKey=$SONAR_KEY
         run: echo "Analise sonar desabilitada"
-
   open-pr:
     needs: build-and-analyze
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Set up Git
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
-
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: Update report
-          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
           author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
           signoff: false
           branch: develop
           delete-branch: true
-          title: "feat: integração automática"
+          title: "feat: integração automática para develop"
           body: |
             Este PR foi criado automaticamente após passar no Quality Gate do SonarQube.
           labels: |
