@@ -58,8 +58,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh pr create \
-            --base develop \
-            --head ${{ github.head_ref }} \
-            --title "PR_aberta" \
-            --body "PR criado automaticamente após sucesso na análise Sonar."
+          gh pr create --base develop --head ${{ github.head_ref }} -t "PR aberta auto" -b "PR criado automaticamente após sucesso na análise Sonar."
