@@ -53,21 +53,13 @@ jobs:
   create-pull-request:
     needs: build-and-analyze
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pages: write
-      pull-requests: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v5
-        with:
-          base: develop
-          branch: ${{ github.ref_name }}
-          title: "Auto PR: ${{ github.ref_name }} to develop"
-          commit-message: "Automated PR from ${{ github.ref_name }} to develop"
-          author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
-          body: |
-            This is an automated pull request from `${{ github.ref_name }}` to `develop`. Please review and merge.
-          draft: false
+      - name: Create PR via GitHub CLI
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --base develop \
+            --head ${{ github.head_ref }} \
+            --title "feat: integração automática" \
+            --body "PR criado automaticamente após sucesso na análise Sonar."
