@@ -61,5 +61,5 @@ jobs:
           gh pr create \
             --base develop \
             --head ${{ github.head_ref }} \
-            --title "feat: integração automática" \
+            --title "PR_aberta" \
             --body "PR criado automaticamente após sucesso na análise Sonar."
