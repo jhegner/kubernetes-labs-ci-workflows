@@ -71,6 +71,7 @@ jobs:
           author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
           signoff: false
           branch: ${{ github.ref_name }}
+          base: develop
           delete-branch: true
           title: "feat: integração automática para develop"
           body: |
