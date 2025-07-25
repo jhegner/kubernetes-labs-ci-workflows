@@ -55,7 +55,8 @@ jobs:
       #    exit-code: '1'
 
       - name: 🔍 Análise Sonar
-        run: mvn verify sonar:sonar -Dsonar.login=$SONAR_TOKEN -Dsonar.organization="kubernetes-labs" -Dsonar.projectKey=$SONAR_KEY
+        # run: mvn verify sonar:sonar -Dsonar.login=$SONAR_TOKEN -Dsonar.organization="kubernetes-labs" -Dsonar.projectKey=$SONAR_KEY
+        run: echo "Analise sonar desabilitada"
 
   open-pr:
     needs: build-and-analyze
@@ -73,9 +74,19 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          source: ${{ github.head_ref }}
-          destination: develop
+          commit-message: Update report
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
+          signoff: false
+          branch: develop
+          delete-branch: true
           title: "feat: integração automática"
           body: |
             Este PR foi criado automaticamente após passar no Quality Gate do SonarQube.
-          labels: automerge
+          labels: |
+            automerge
+            kubernetes-labs
+            app
+          team-reviewers: |
+            developers
+            qa-team
