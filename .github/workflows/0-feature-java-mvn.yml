@@ -49,37 +49,21 @@ jobs:
       - name: 🔍 Análise Sonar
         # run: mvn verify sonar:sonar -Dsonar.login=$SONAR_TOKEN -Dsonar.organization="kubernetes-labs" -Dsonar.projectKey=$SONAR_KEY
         run: echo "Analise sonar desabilitada"
-  open-pr:
+
+  create-pull-request:
     needs: build-and-analyze
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-      contents: write
-      pages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Set up Git
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: Update report
-          author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
-          signoff: false
-          branch: ${{ github.ref_name }}
           base: develop
-          delete-branch: true
-          title: "feat: integração automática para develop"
+          branch: ${{ github.ref_name }}
+          title: "Auto PR: ${{ github.ref_name }} to develop"
+          commit-message: "Automated PR from ${{ github.ref_name }} to develop"
+          author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
           body: |
-            Este PR foi criado automaticamente após passar no Quality Gate do SonarQube.
-          labels: |
-            automerge
-            kubernetes-labs
-            app
-          team-reviewers: |
-            developers
-            qa-team
+            This is an automated pull request from `${{ github.ref_name }}` to `develop`. Please review and merge.
+          draft: false
