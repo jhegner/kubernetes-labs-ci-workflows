@@ -54,33 +54,34 @@ jobs:
         # run: mvn verify sonar:sonar -Dsonar.login=$SONAR_TOKEN -Dsonar.organization="kubernetes-labs" -Dsonar.projectKey=$SONAR_KEY
         run: echo "Analise sonar desabilitada"
 
-    create-pr:
-      name: Create PR from feature/* to develop
-      runs-on: ubuntu-latest
-      steps:
-        - name: Create Pull Request to develop
-          shell: bash
-          run: |
-            echo "🔍 Verificando PR de ${{ inputs.source-branch }} para develop"
+  create-pr:
+    name: Create PR from feature/* to develop
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Pull Request to develop
+        shell: bash
+        run: |
+          echo "🔍 Verificando PR de ${{ inputs.source-branch }} para develop"
   
-            existing_pr=$(curl -s -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
-              https://api.github.com/repos/${{ github.repository }}/pulls \
-              | jq '.[] | select(.head.ref == "${{ inputs.source-branch }}" and .base.ref == "develop")')
+          existing_pr=$(curl -s -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/pulls \
+            | jq '.[] | select(.head.ref == "${{ inputs.source-branch }}" and .base.ref == "develop")')
   
-            if [ -n "$existing_pr" ]; then
-              echo "✅ PR já existe. Ignorando."
-              exit 0
-            fi
+          if [ -n "$existing_pr" ]; then
+            echo "✅ PR já existe. Ignorando."
+            exit 0
+          fi
   
-            echo "🚀 Criando PR via GitHub API"
-            curl -X POST -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
-              -H "Content-Type: application/json" \
-              https://api.github.com/repos/${{ github.repository }}/pulls \
-              -d @- <<EOF
-            {
-              "title": "Auto PR: Merge ${{ inputs.source-branch }} into develop",
-              "head": "${{ inputs.source-branch }}",
-              "base": "develop",
-              "body": "🤖 PR automático gerado após análise bem-sucedida."
-            }
-            EOF
+          echo "🚀 Criando PR via GitHub API"
+          curl -X POST -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            https://api.github.com/repos/${{ github.repository }}/pulls \
+            -d @- <<EOF
+          {
+            "title": "Auto PR: Merge ${{ inputs.source-branch }} into develop",
+            "head": "${{ inputs.source-branch }}",
+            "base": "develop",
+            "body": "🤖 PR automático gerado após análise bem-sucedida."
+          }
+          EOF
+  
