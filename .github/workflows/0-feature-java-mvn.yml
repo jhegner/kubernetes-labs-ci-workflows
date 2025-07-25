@@ -53,6 +53,10 @@ jobs:
   create-pull-request:
     needs: build-and-analyze
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
