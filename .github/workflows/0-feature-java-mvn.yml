@@ -16,9 +16,6 @@ on:
 
 jobs:
   build-and-analyze:
-    permissions:
-      pull-requests: write
-
     runs-on: ubuntu-latest
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -53,9 +50,10 @@ jobs:
         # run: mvn verify sonar:sonar -Dsonar.login=$SONAR_TOKEN -Dsonar.organization="kubernetes-labs" -Dsonar.projectKey=$SONAR_KEY
         run: echo "Analise sonar desabilitada"
   open-pr:
+    permissions:
+      pull-requests: write
     needs: build-and-analyze
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
