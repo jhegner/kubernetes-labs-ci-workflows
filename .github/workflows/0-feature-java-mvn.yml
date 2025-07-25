@@ -17,9 +17,12 @@ on:
 jobs:
   build-and-analyze:
     runs-on: ubuntu-latest
+    outputs:
+      sonar-status: ${{ steps.sonar_scan.outputs.quality_gate_status }}
+
     env:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}   
-      SONAR_KEY: ${{ secrets.SONAR_KEY }}       
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SONAR_KEY: ${{ secrets.SONAR_KEY }}
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
@@ -53,3 +56,26 @@ jobs:
 
       - name: 🔍 Análise Sonar
         run: mvn verify sonar:sonar -Dsonar.login=$SONAR_TOKEN -Dsonar.organization="kubernetes-labs" -Dsonar.projectKey=$SONAR_KEY
+
+  open-pr:
+    needs: build-and-analyze
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          source: ${{ github.head_ref }}
+          destination: develop
+          title: "feat: integração automática"
+          body: |
+            Este PR foi criado automaticamente após passar no Quality Gate do SonarQube.
+          labels: automerge
