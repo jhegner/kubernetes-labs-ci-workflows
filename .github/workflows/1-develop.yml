@@ -1,0 +1,83 @@
+name: CI/CD Develop Workflow
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_call:
+    inputs:
+      container-registry-name:
+        required: true
+        type: string
+    secrets:
+      GH_TOKEN:
+        required: true
+      VULTR_API_KEY:
+        required: true
+
+jobs:
+  generate-semantic-tags:
+    name: Generate Semantic Tags
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # necessário para pegar histórico de tags
+
+      - name: Setup Node (para semantic-release)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Install dependencies for semantic release
+        run: npm install -g semantic-release @semantic-release/git @semantic-release/changelog @semantic-release/commit-analyzer @semantic-release/release-notes-generator
+
+      - name: Create release tag with semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: semantic-release
+
+  build-container-image:
+    name: Build Container Image
+    runs-on: ubuntu-latest
+    needs: generate-semantic-tags
+
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: List Container Registry
+        shell: bash
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq
+          curl -s \
+            -H "Authorization: Bearer ${{ secrets.VULTR_API_TOKEN }}" \
+            "https://api.vultr.com/v2/registries" > response.json
+
+          VULTR_REGISTRY_HOST=$(jq -r '.registries[] | select(.name == "${{ inputs.container-registry-name }}") | "https://" + .urn' response.json)
+          echo "VULTR_REGISTRY_HOST=${VULTR_REGISTRY_HOST}" >> $GITHUB_ENV
+
+          VULTR_REGISTRY_USERNAME=$(jq -r '.registries[0].root_user.username' response.json)
+          echo "VULTR_REGISTRY_USERNAME=${VULTR_REGISTRY_USERNAME}" >> $GITHUB_ENV
+
+          VULTR_REGISTRY_PASSWORD=$(jq -r '.registries[0].root_user.password' response.json)
+          echo "VULTR_REGISTRY_PASSWORD=${VULTR_REGISTRY_PASSWORD}" >> $GITHUB_ENV
+
+          echo "VULTR_REGISTRY_HOST: $VULTR_REGISTRY_HOST"
+          echo "VULTR_REGISTRY_USERNAME: $VULTR_REGISTRY_USERNAME"
+          echo "VULTR_REGISTRY_PASSWORD: $VULTR_REGISTRY_PASSWORD"
+
+    #  - name: Set up Docker Buildx
+    #    uses: docker/setup-buildx-action@v3
+
+#
+#  - name: Log in to Vultr Container Registry
+#    uses: docker/login-action@v3
+#    with:
+#      registry: ${{ secrets.VULTR_REGISTRY_HOST }}
+#      username: ${{ secrets.VULTR_REGISTRY_USERNAME }}
+#      password: ${{ secrets.VULTR_REGISTRY_PASSWORD }}

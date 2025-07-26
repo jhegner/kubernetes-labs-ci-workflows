@@ -1,4 +1,4 @@
-name: CI Feature Workflow Java Maven
+name: CI/CD Feature Workflow
 
 on:
   workflow_call:
@@ -27,11 +27,13 @@ jobs:
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
+
       - name: Setup JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: corretto
           java-version: 21
+
       - name: Cache Maven
         uses: actions/cache@v3
         with:
@@ -39,8 +41,10 @@ jobs:
           key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             maven-${{ runner.os }}-
+
       - name: 📦 Build com Maven
         run: mvn clean install --no-transfer-progress
+
       - name: 🧪 Lint da imagem com Hadolint
         uses: tmknom/secure-hadolint-action@v0.4.2
 
@@ -69,7 +73,7 @@ jobs:
             | jq '.[] | select(.head.ref == "${{ inputs.source-branch }}" and .base.ref == "develop")')
 
           if [ -n "$existing_pr" ]; then
-            echo "✅ PR já existe. Ignorando."
+            echo "✅ PR já existe. Ignorando..."
             exit 0
           fi
 
