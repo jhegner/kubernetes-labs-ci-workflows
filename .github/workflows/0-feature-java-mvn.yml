@@ -55,6 +55,7 @@ jobs:
 
   create-pr:
     name: Create PR from feature/* to develop
+    needs: build-and-analyze
     runs-on: ubuntu-latest
     steps:
       - name: Create Pull Request to develop
