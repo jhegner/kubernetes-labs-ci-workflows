@@ -6,7 +6,6 @@ on:
       project-name:
         required: true
         type: string
-    inputs:
       source-branch:
         required: true
         type: string
@@ -62,16 +61,16 @@ jobs:
         shell: bash
         run: |
           echo "🔍 Verificando PR de ${{ inputs.source-branch }} para develop"
-  
+
           existing_pr=$(curl -s -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
             https://api.github.com/repos/${{ github.repository }}/pulls \
             | jq '.[] | select(.head.ref == "${{ inputs.source-branch }}" and .base.ref == "develop")')
-  
+
           if [ -n "$existing_pr" ]; then
             echo "✅ PR já existe. Ignorando."
             exit 0
           fi
-  
+
           echo "🚀 Criando PR via GitHub API"
           curl -X POST -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
             -H "Content-Type: application/json" \
@@ -84,4 +83,3 @@ jobs:
             "body": "🤖 PR automático gerado após análise bem-sucedida."
           }
           EOF
-  
