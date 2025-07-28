@@ -1,0 +1,19 @@
+name: CI/CD Develop Workflow
+
+on:
+  push:
+    branches:
+      - test
+
+jobs:
+
+  scan-trivy:
+    name: 🐺 Scan com Trivy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "ewr.vultrcr.com/testecr/kubernetes-labs-app-micronout:develop"
+          format: "table"
+          exit-code: "1"

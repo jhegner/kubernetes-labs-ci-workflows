@@ -1,0 +1,85 @@
+name: CI/CD Feature Workflow
+
+on:
+  workflow_call:
+    inputs:
+      project-name:
+        required: true
+        type: string
+      source-branch:
+        required: true
+        type: string
+    secrets:
+      GH_TOKEN:
+        required: true
+      SONAR_TOKEN:
+        required: true
+      SONAR_KEY:
+        required: true
+
+jobs:
+  build-and-analyze:
+    name: Build and analyze the code
+    runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SONAR_KEY: ${{ secrets.SONAR_KEY }}
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: corretto
+          java-version: 21
+
+      - name: Cache Maven
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: maven-${{ runner.os }}-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            maven-${{ runner.os }}-
+
+      - name: 📦 Build com Maven
+        run: mvn clean install --no-transfer-progress
+
+      - name: 🧪 Lint da imagem com Hadolint
+        uses: tmknom/secure-hadolint-action@v0.4.2
+
+      - name: 🔍 Análise Sonar
+        # run: mvn verify sonar:sonar -Dsonar.login=$SONAR_TOKEN -Dsonar.organization="kubernetes-labs" -Dsonar.projectKey=$SONAR_KEY
+        run: echo "Analise sonar desabilitada"
+
+  create-pr:
+    name: Create PR from feature to develop
+    needs: build-and-analyze
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Pull Request to develop
+        shell: bash
+        run: |
+          echo "🔍 Verificando PR de ${{ inputs.source-branch }} para develop"
+
+          existing_pr=$(curl -s -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/pulls \
+            | jq '.[] | select(.head.ref == "${{ inputs.source-branch }}" and .base.ref == "develop")')
+
+          if [ -n "$existing_pr" ]; then
+            echo "✅ PR já existe. Ignorando..."
+            exit 0
+          fi
+
+          echo "🚀 Criando PR via GitHub API"
+          curl -X POST -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            https://api.github.com/repos/${{ github.repository }}/pulls \
+            -d @- <<EOF
+          {
+            "title": "Auto PR: Merge ${{ inputs.source-branch }} into develop",
+            "head": "${{ inputs.source-branch }}",
+            "base": "develop",
+            "body": "🤖 PR automático gerado após análise bem-sucedida."
+          }
+          EOF
