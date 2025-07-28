@@ -1,9 +1,11 @@
 name: CI/CD Develop Workflow
 
 on:
+  
   push:
     branches:
       - develop
+
   workflow_call:
     inputs:
       image-name:
@@ -22,12 +24,12 @@ on:
       VULTR_REGISTRY_PASSWORD:
         required: true     
       VULTR_CONTAINER_REGISTRY_NAME:
-        required: true                
+        required: true               
 
 jobs:  
 
   build-container-image:
-    name: Build Container Image
+    name: 🫙 Build Container Image
     runs-on: ubuntu-latest
 
     steps:
@@ -55,5 +57,17 @@ jobs:
           file: ./Dockerfile
           push: true
           # A tag precisa ter o endereco do registry para login e envio senao o docker tenta enviar para o dockerhub
-          tags: ${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}
+          tags: ${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}:latest
 
+  scan-trivy:
+    name: 🐺 Scan com Trivy
+    runs-on: ubuntu-latest
+    needs: build-container-image
+
+    steps:
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}:latest'
+          format: 'table'
+          exit-code: '1'          
