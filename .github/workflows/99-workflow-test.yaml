@@ -17,3 +17,6 @@ jobs:
           image-ref: "ewr.vultrcr.com/testecr/kubernetes-labs-app-micronout:develop"
           format: "table"
           exit-code: "1"
+        env:
+          TRIVY_USERNAME: ${{ secrets.VULTR_REGISTRY_USERNAME }}
+          TRIVY_PASSWORD: ${{ secrets.VULTR_REGISTRY_PASSWORD }}
