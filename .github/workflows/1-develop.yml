@@ -29,7 +29,7 @@ jobs:
         shell: bash
         run: |
           curl -s \
-            -H "Authorization: Bearer ${{ secrets.VULTR_API_TOKEN }}" \
+            -H "Authorization: Bearer ${{ secrets.VULTR_API_KEY }}" \
             "https://api.vultr.com/v2/registries" > response.json
 
           VULTR_REGISTRY_HOST=$(jq -r '.registries[] | select(.name == "${{ inputs.container-registry-name }}") | "https://" + .urn' response.json)
