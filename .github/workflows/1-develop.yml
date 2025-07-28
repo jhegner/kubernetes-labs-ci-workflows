@@ -9,6 +9,9 @@ on:
       container-registry-name:
         required: true
         type: string
+      image-name:
+        required: true
+        type: string
     secrets:
       GH_TOKEN:
         required: true
@@ -30,22 +33,22 @@ jobs:
         run: |
           curl -s \
             -H "Authorization: Bearer ${{ secrets.VULTR_API_KEY }}" \
-            "https://api.vultr.com/v2/registries" > response.json
+            "https://api.vultr.com/v2/registries" > response.json          
 
           VULTR_REGISTRY_HOST=$(jq -r '.registries[] | select(.name == "${{ inputs.container-registry-name }}") | "https://" + .urn' response.json)
           echo "VULTR_REGISTRY_HOST=${VULTR_REGISTRY_HOST}" >> $GITHUB_ENV
 
-          VULTR_REGISTRY_USERNAME=$(jq -r '.registries[0].root_user.username' response.json)
+          VULTR_REGISTRY_USERNAME=$(jq -r '.registries[].root_user.username' response.json)
           echo "VULTR_REGISTRY_USERNAME=${VULTR_REGISTRY_USERNAME}" >> $GITHUB_ENV
 
           VULTR_REGISTRY_PASSWORD=$(jq -r '.registries[0].root_user.password' response.json)
           echo "VULTR_REGISTRY_PASSWORD=${VULTR_REGISTRY_PASSWORD}" >> $GITHUB_ENV
 
+          VULTR_REGISTRY_URN=$(jq -r '.registries[0].urn' response.json)
+          echo "VULTR_REGISTRY_URN=${VULTR_REGISTRY_URN}" >> $GITHUB_ENV
+
       - name: Checkout source code
         uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
 
       - name: Log in to Vultr Container Registry
         uses: docker/login-action@v3
@@ -54,13 +57,16 @@ jobs:
           username: ${{ env.VULTR_REGISTRY_USERNAME }}
           password: ${{ env.VULTR_REGISTRY_PASSWORD }}
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ inputs.container-registry-name }}:${{ github.sha }}
+          tags: ${{ env.VULTR_REGISTRY_URN }}/${{ inputs.image-name }}:${{ github.sha }}
 
       - name: Logout from Docker Registry
         run: docker logout ${{ secrets.VULTR_REGISTRY_HOST }}
