@@ -57,7 +57,9 @@ jobs:
           file: ./Dockerfile
           push: true
           # A tag precisa ter o endereco do registry para login e envio senao o docker tenta enviar para o dockerhub
-          tags: ${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}:latest
+          tags: |
+            ${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}:latest
+            ${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}:0.0.1
 
   scan-trivy:
     name: 🐺 Scan com Trivy
@@ -68,6 +70,6 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: '${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}:latest'
+          image-ref: '${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}:0.0.1'
           format: 'table'
           exit-code: '1'          
