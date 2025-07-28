@@ -28,7 +28,7 @@ jobs:
       - name: List Container Registry
         shell: bash
         run: |
-          sudo apt-get update && sudo apt-get install -y jq
+          apt-get install -y jq
           curl -s \
             -H "Authorization: Bearer ${{ secrets.VULTR_API_TOKEN }}" \
             "https://api.vultr.com/v2/registries" > response.json
