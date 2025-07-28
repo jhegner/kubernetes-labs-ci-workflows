@@ -1,0 +1,59 @@
+name: CI/CD Develop Workflow
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_call:
+    inputs:
+      image-name:
+        required: true
+        type: string
+      
+    secrets:
+      GH_TOKEN:
+        required: true
+      VULTR_API_KEY:
+        required: true
+      VULTR_REGISTRY_URN:
+        required: true
+      VULTR_REGISTRY_USERNAME:
+        required: true       
+      VULTR_REGISTRY_PASSWORD:
+        required: true     
+      VULTR_CONTAINER_REGISTRY_NAME:
+        required: true                
+
+jobs:  
+
+  build-container-image:
+    name: Build Container Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Log in to Vultr Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}
+          username: ${{ secrets.VULTR_REGISTRY_USERNAME }}
+          password: ${{ secrets.VULTR_REGISTRY_PASSWORD }}
+          logout: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          # A tag precisa ter o endereco do registry para login e envio senao o docker tenta enviar para o dockerhub
+          tags: ${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}
+
