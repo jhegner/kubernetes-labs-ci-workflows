@@ -39,7 +39,6 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}
-          labels: ${{ steps.meta.outputs.labels }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
