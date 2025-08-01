@@ -1,0 +1,41 @@
+name: CI/CD Destroy Infra Workflow
+
+on:
+  workflow_call:
+    secrets:
+      VULTR_API_KEY:
+        required: true
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+
+jobs:
+  terraform-execute:
+    name: Terraform execute deploy infra
+    runs-on: ubuntu-latest
+    env:
+      TF_LOG: TRACE
+      TF_VAR_VULTR_API_KEY: ${{ secrets.VULTR_API_KEY }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        id: init
+        run: terraform init -reconfigure
+
+      - name: Terraform Destroy
+        id: destroy
+        run: terraform destroy -auto-approve
