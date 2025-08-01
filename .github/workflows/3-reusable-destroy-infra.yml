@@ -2,6 +2,13 @@ name: CI/CD Destroy Infra Workflow
 
 on:
   workflow_call:
+    inputs:
+      bucket-tf-backend-name:
+        required: true
+        type: string
+      key-tf-backend-name:
+        required: true
+        type: string
     secrets:
       VULTR_API_KEY:
         required: true
@@ -28,6 +35,9 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
+
+      - name: Delete S3 bucket state file contents - [${{ inputs.bucket-tf-backend-name }}/${{ inputs.key-tf-backend-name }}]
+        run: aws s3 rm s3://${{ inputs.bucket-tf-backend-name }}/${{ inputs.key-tf-backend-name }} --recursive
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
