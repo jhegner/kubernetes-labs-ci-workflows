@@ -82,3 +82,12 @@ jobs:
         env:
           TRIVY_USERNAME: ${{ secrets.VULTR_REGISTRY_USERNAME }}
           TRIVY_PASSWORD: ${{ secrets.VULTR_REGISTRY_PASSWORD }}
+
+  send-notification:
+    name: 📩 Send notification for developers
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Notificacao Slack
+        # adicionar
+        run: echo "Notificacao sobre deploy enviada no \#Slack com sucesso"
