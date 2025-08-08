@@ -45,7 +45,7 @@ jobs:
 
       - name: Terraform Destroy
         id: destroy
-        run: terraform destroy -auto-approve
+        run: terraform destroy -auto-approve -var-file="./environments/terraform.tfvars"
 
       - name: Delete S3 bucket state file contents - [${{ inputs.bucket-tf-backend-name }}/${{ inputs.key-tf-backend-name }}]
         run: |
