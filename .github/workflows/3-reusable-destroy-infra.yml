@@ -1,4 +1,4 @@
-name: CI/CD Destroy Infra Workflow
+name: CI/CD Infra Reusable Workflow - Destroy
 
 on:
   workflow_call:
@@ -19,7 +19,7 @@ on:
 
 jobs:
   terraform-execute:
-    name: Terraform execute deploy infra
+    name: 💣 Terraform execute destroy infra
     runs-on: ubuntu-latest
     env:
       TF_LOG: TRACE
@@ -36,18 +36,18 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Delete S3 bucket state file contents - [${{ inputs.bucket-tf-backend-name }}/${{ inputs.key-tf-backend-name }}]
-        run: |
-          aws s3 rm s3://${{ inputs.bucket-tf-backend-name }}/${{ inputs.key-tf-backend-name }} --recursive
-          aws s3 rm s3://${{ inputs.bucket-tf-backend-name }}/${{ inputs.key-tf-backend-name }}.tflock
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Init
         id: init
-        run: terraform init -reconfigure
+        run: terraform init
 
       - name: Terraform Destroy
         id: destroy
         run: terraform destroy -auto-approve
+
+      - name: Delete S3 bucket state file contents - [${{ inputs.bucket-tf-backend-name }}/${{ inputs.key-tf-backend-name }}]
+        run: |
+          aws s3 rm s3://${{ inputs.bucket-tf-backend-name }}/${{ inputs.key-tf-backend-name }} --recursive
+          aws s3 rm s3://${{ inputs.bucket-tf-backend-name }}/${{ inputs.key-tf-backend-name }}.tflock        

@@ -1,4 +1,4 @@
-name: CI/CD Deploy Infra Workflow
+name: CI/CD Infra Reusable Workflow - Deploy
 
 on:
   workflow_call:
@@ -12,6 +12,9 @@ on:
     secrets:
       VULTR_API_KEY:
         required: true
+      VULTR_SSH_PUBLIC_KEY:
+        required: false
+        description: "Optional SSH public key for Vultr instances"
       AWS_ACCESS_KEY_ID:
         required: true
       AWS_SECRET_ACCESS_KEY:
@@ -19,11 +22,12 @@ on:
 
 jobs:
   terraform-execute:
-    name: Terraform execute deploy infra
+    name: 🦾 Terraform execute deploy infra
     runs-on: ubuntu-latest
     env:
       TF_LOG: TRACE
       TF_VAR_VULTR_API_KEY: ${{ secrets.VULTR_API_KEY }}
+      TF_VAR_VULTR_SSH_PUBLIC_KEY: ${{ secrets.VULTR_SSH_PUBLIC_KEY }}      
 
     steps:
       - name: Checkout repository
@@ -39,18 +43,14 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
-
       - name: Terraform Init
-        run: terraform init -reconfigure
+        run: terraform init
 
       - name: Terraform Validate
         run: terraform validate
 
       - name: Terraform Plan
-        run: terraform plan -var-file="./environments/terraform.tfvars" -out=tfplan
-        
+        run: terraform plan -var-file="./environments/terraform.tfvars" -out=tfplan    
 
       - name: Terraform Apply
-        run: terraform apply "tfplan" -auto-approve
+        run: terraform apply -auto-approve tfplan
