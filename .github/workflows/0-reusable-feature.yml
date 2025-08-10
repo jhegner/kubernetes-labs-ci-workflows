@@ -52,7 +52,7 @@ jobs:
         uses: tmknom/secure-hadolint-action@v0.4.2
 
       - name: 🔍 Análise Sonar
-        run: mvn verify sonar:sonar -Dsonar.login=$SONAR_TOKEN -Dsonar.organization="kubernetes-labs" -Dsonar.projectKey=$SONAR_KEY
+        run: mvn verify sonar:sonar -Dsonar.login=$SONAR_TOKEN -Dsonar.organization=$SONAR_KEY -Dsonar.projectKey=$SONAR_KEY
         #run: echo "Analise sonar desabilitada"
 
   create-pr:
