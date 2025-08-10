@@ -49,5 +49,5 @@ jobs:
 
       - name: Delete S3 bucket state file contents - [${{ inputs.bucket-tf-backend-name }}/${{ inputs.key-tf-backend-name }}]
         run: |
-          aws s3 rm s3://${{ inputs.bucket-tf-backend-name }}/${{ inputs.key-tf-backend-name }} --recursive
-          aws s3 rm s3://${{ inputs.bucket-tf-backend-name }}/${{ inputs.key-tf-backend-name }}.tflock        
+          aws s3 rm s3://${{ inputs.bucket-tf-backend-name }}/ --recursive
+          
