@@ -16,6 +16,8 @@ on:
         required: true
       SONAR_KEY:
         required: true
+      MOCKAPI_PROJECT_SECRET:
+        required: false        
 
 jobs:
   build-and-analyze:
@@ -24,6 +26,7 @@ jobs:
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       SONAR_KEY: ${{ secrets.SONAR_KEY }}
+      MOCKAPI_PROJECT_SECRET: ${{ secrets.MOCKAPI_PROJECT_SECRET }}      
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
