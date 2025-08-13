@@ -97,7 +97,7 @@ jobs:
         run: |
 
           clusters_json=$(curl --request GET --url https://api.vultr.com/v2/kubernetes/clusters \
-          --header 'Authorization: Bearer ${VULTR_API_KEY}')
+          --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')
 
           echo "clusters_json --> ${clusters_json}"
 
@@ -119,7 +119,7 @@ jobs:
         run: |
 
           registries_json=$(curl --request GET --url https://api.vultr.com/v2/registries \
-          --header 'Authorization: Bearer ${VULTR_API_KEY}')              
+          --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')              
 
           if [ "$(echo "$registries_json" | jq '.registries | length')" -eq 0 ]; then
             echo "❌ Não foi encontrado registries provisionados no ambiente."
@@ -136,7 +136,7 @@ jobs:
           expiry_seconds_time=60
 
           config_json=$(curl --request OPTIONS --url 'https://api.vultr.com/v2/registry/${registry_id}/docker-credentials/kubernetes? \
-            expiry_seconds=${expiry_seconds_time}&read_write=true&base64_encode=true' --header 'Authorization: Bearer ${VULTR_API_KEY}')
+            expiry_seconds=${expiry_seconds_time}&read_write=true&base64_encode=true' --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')
 
           kubeconfig_base64=$(echo "$config_json" | jq -r '.yaml_b64')          
 
