@@ -16,6 +16,8 @@ on:
         required: true
       SONAR_KEY:
         required: true
+      MOCKAPI_PROJECT_SECRET:
+        required: false        
 
 jobs:
   build-and-analyze:
@@ -24,6 +26,7 @@ jobs:
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       SONAR_KEY: ${{ secrets.SONAR_KEY }}
+      MOCKAPI_PROJECT_SECRET: ${{ secrets.MOCKAPI_PROJECT_SECRET }}      
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
@@ -49,7 +52,7 @@ jobs:
         uses: tmknom/secure-hadolint-action@v0.4.2
 
       - name: 🔍 Análise Sonar
-        run: mvn verify sonar:sonar -Dsonar.login=$SONAR_TOKEN -Dsonar.organization="kubernetes-labs" -Dsonar.projectKey=$SONAR_KEY
+        run: mvn verify sonar:sonar -Dsonar.login=$SONAR_TOKEN -Dsonar.organization=$SONAR_KEY -Dsonar.projectKey=$SONAR_KEY
         #run: echo "Analise sonar desabilitada"
 
   create-pr:
