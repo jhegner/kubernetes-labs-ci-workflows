@@ -11,7 +11,6 @@ on:
         required: true
         type: string
       cluster-name:
-        required: true
         type: string
         default: "kubernetes-labs-cluster"
 
