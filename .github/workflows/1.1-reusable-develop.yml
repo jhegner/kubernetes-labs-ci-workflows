@@ -199,12 +199,12 @@ jobs:
           export IMAGE_NAME="${VULTR_REGISTRY_URN}/${VULTR_CONTAINER_REGISTRY_NAME}/${{ inputs.image-name }}
           export IMAGE_TAG="develop"
 
-          mv k8s/app/deployment.yaml k8s/app/deployment.yaml.template
-          envsubst < k8s/app/deployment.yaml.template > k8s/app/deployment.yaml
+          mv infra/kubernetes.yaml infra/kubernetes.yaml.template
+          envsubst < infra/kubernetes.yaml.template > infra/kubernetes.yaml
 
       - name: 🎯 Deploy dos manifestos
         run: |
-          kubectl apply -f k8s/infra/
+          kubectl apply -f infra/
 
   send-notification:
     name: 📩 Send notification for developers
