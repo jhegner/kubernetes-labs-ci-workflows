@@ -42,19 +42,19 @@ jobs:
             exit 1
           fi
 
-          registry_id=$(echo $registries_json | jq -r '.registries[] | \
-            select(.name | contains("'${VULTR_CONTAINER_REGISTRY_NAME}'")) | .id')          
+          registry_id=$(echo $registries_json | jq -r \'.registries[] | select(\
+          .name | contains("'${VULTR_CONTAINER_REGISTRY_NAME}'")) | .id')          
 
           echo "✅ Registry [$registry_id] encontrado: $registry_id"
 
-          VULTR_REGISTRY_URN=$(echo $registries_json | jq -r '.registries[] | \
-            select(.name | contains("'${VULTR_CONTAINER_REGISTRY_NAME}'")) | .urn')
+          VULTR_REGISTRY_URN=$(echo $registries_json | jq -r '.registries[] | select(\
+          .name | contains("'${VULTR_CONTAINER_REGISTRY_NAME}'")) | .urn')
             
-          VULTR_REGISTRY_USERNAME=$(echo $registries_json | jq -r '.registries[] | \
-          select(.name | contains("'${VULTR_CONTAINER_REGISTRY_NAME}'")) | .root_user.username')        
+          VULTR_REGISTRY_USERNAME=$(echo $registries_json | jq -r '.registries[] | select(\
+          .name | contains("'${VULTR_CONTAINER_REGISTRY_NAME}'")) | .root_user.username')        
             
-          VULTR_REGISTRY_PASSWORD=$(echo $registries_json | jq -r '.registries[] | \
-          select(.name | contains("'${VULTR_CONTAINER_REGISTRY_NAME}'")) | .root_user.password')
+          VULTR_REGISTRY_PASSWORD=$(echo $registries_json | jq -r '.registries[] | select(\
+          .name | contains("'${VULTR_CONTAINER_REGISTRY_NAME}'")) | .root_user.password')
 
           echo "::add-mask::$VULTR_REGISTRY_URN"
           echo "::add-mask::$VULTR_REGISTRY_USERNAME"
