@@ -34,27 +34,27 @@ jobs:
       - name: 🔍 Consulta container registries
         run: |
 
-          registries_json=$(curl --request GET --url https://api.vultr.com/v2/registries \
-          --header "Authorization: Bearer ${{ secrets.VULTR_API_KEY }}")              
+          registries_json=$(curl --request GET --url "https://api.vultr.com/v2/registries" \
+            --header "Authorization: Bearer ${{ secrets.VULTR_API_KEY }}")              
 
           if [ "$(echo "$registries_json" | jq '.registries | length')" -eq 0 ]; then
             echo "❌ Não foi encontrado registries provisionados no ambiente."
             exit 1
           fi
 
-          registry_id=$(echo $registries_json | jq -r '.registries[] | select(.name | \ 
-            contains("'${VULTR_CONTAINER_REGISTRY_NAME}'")) | .id')
+          registry_id=$(echo $registries_json | jq -r '.registries[] | \
+            select(.name | contains("'${VULTR_CONTAINER_REGISTRY_NAME}'")) | .id')          
 
           echo "✅ Registry [$registry_id] encontrado: $registry_id"
 
-          VULTR_REGISTRY_URN=$(echo $registries_json | jq -r '.registries[] | \ 
+          VULTR_REGISTRY_URN=$(echo $registries_json | jq -r '.registries[] | \
             select(.name | contains("'${VULTR_CONTAINER_REGISTRY_NAME}'")) | .urn')
             
-          VULTR_REGISTRY_USERNAME=$(echo $registries_json | jq -r '.registries[] | \ 
-            select(.name | contains("'${VULTR_CONTAINER_REGISTRY_NAME}'")) | .root_user.username')        
+          VULTR_REGISTRY_USERNAME=$(echo $registries_json | jq -r '.registries[] | \
+          select(.name | contains("'${VULTR_CONTAINER_REGISTRY_NAME}'")) | .root_user.username')        
             
-          VULTR_REGISTRY_PASSWORD=$(echo $registries_json | jq -r '.registries[] | \ 
-            select(.name | contains("'${VULTR_CONTAINER_REGISTRY_NAME}'")) | .root_user.password')
+          VULTR_REGISTRY_PASSWORD=$(echo $registries_json | jq -r '.registries[] | \
+          select(.name | contains("'${VULTR_CONTAINER_REGISTRY_NAME}'")) | .root_user.password')
 
           echo "::add-mask::$VULTR_REGISTRY_URN"
           echo "::add-mask::$VULTR_REGISTRY_USERNAME"
@@ -132,7 +132,7 @@ jobs:
         if: false      
         run: |
 
-          clusters_json=$(curl --request GET --url https://api.vultr.com/v2/kubernetes/clusters \
+          clusters_json=$(curl --request GET --url "https://api.vultr.com/v2/kubernetes/clusters" \
           --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')
 
           echo "clusters_json --> ${clusters_json}"
@@ -155,7 +155,7 @@ jobs:
         if: false      
         run: |
 
-          registries_json=$(curl --request GET --url https://api.vultr.com/v2/registries \
+          registries_json=$(curl --request GET --url "https://api.vultr.com/v2/registries" \
           --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')              
 
           if [ "$(echo "$registries_json" | jq '.registries | length')" -eq 0 ]; then
@@ -174,8 +174,8 @@ jobs:
 
           expiry_seconds_time=60
 
-          config_json=$(curl --request OPTIONS --url 'https://api.vultr.com/v2/registry/${registry_id}/docker-credentials/kubernetes? \
-            expiry_seconds=${expiry_seconds_time}&read_write=true&base64_encode=true' --header \
+          config_json=$(curl --request OPTIONS --url "https://api.vultr.com/v2/registry/${registry_id}/docker-credentials/kubernetes? \
+            expiry_seconds=${expiry_seconds_time}&read_write=true&base64_encode=true" --header \
             'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')
 
           kubeconfig_base64=$(echo "$config_json" | jq -r '.yaml_b64')          
