@@ -106,7 +106,7 @@ jobs:
             exit 1
           fi
 
-          cluster_id=$(echo $clusters_json | jq -r '.vke_clusters[] | select(.label | contains "${{ inputs.cluster-name }}")) | .id')
+          cluster_id=$(echo $clusters_json | jq -r '.vke_clusters[] | select(.label | contains "'${{ inputs.cluster-name }}'")) | .id')
 
           if [[ -z "$cluster_id" ]]; then
             echo "❌ Não foi encontrado cluster com label 'kubernetes-labs-cluster'."
