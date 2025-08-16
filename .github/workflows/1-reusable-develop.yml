@@ -96,8 +96,8 @@ jobs:
       - name: 🔍 Consulta clusters provisionados
         run: |
 
-          clusters_json=$(curl --request GET --url https://api.vultr.com/v2/kubernetes/clusters \
-          --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')
+          clusters_json=$(curl --request GET --url 'https://api.vultr.com/v2/kubernetes/clusters' \
+            --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')
 
           echo "clusters_json --> ${clusters_json}"
 
@@ -106,7 +106,7 @@ jobs:
             exit 1
           fi
 
-          cluster_id=$(echo $clusters_json | jq -r '.vke_clusters[] | select(.label | contains "'${{ inputs.cluster-name }}'")) | .id')
+          cluster_id=$(echo $clusters_json | jq -r '.vke_clusters[] | select(.label | contains("'${{ inputs.cluster-name }}'")) | .id')
 
           if [[ -z "$cluster_id" ]]; then
             echo "❌ Não foi encontrado cluster com label 'kubernetes-labs-cluster'."
@@ -118,7 +118,7 @@ jobs:
       - name: 🔍 Consulta container registries provisionados
         run: |
 
-          registries_json=$(curl --request GET --url https://api.vultr.com/v2/registries \
+          registries_json=$(curl --request GET --url 'https://api.vultr.com/v2/registries' \
           --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')              
 
           if [ "$(echo "$registries_json" | jq '.registries | length')" -eq 0 ]; then
