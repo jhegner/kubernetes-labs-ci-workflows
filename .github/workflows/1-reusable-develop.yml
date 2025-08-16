@@ -106,7 +106,7 @@ jobs:
             exit 1
           fi
 
-          cluster_id=$(echo $clusters_json | jq -r '.vke_clusters[] | select(.label | contains "'${{ inputs.cluster-name }}'")) | .id')
+          cluster_id=$(echo $clusters_json | jq -r '.vke_clusters[] | select(.label | contains "${{ inputs.cluster-name }}")) | .id')
 
           if [[ -z "$cluster_id" ]]; then
             echo "❌ Não foi encontrado cluster com label 'kubernetes-labs-cluster'."
@@ -126,7 +126,7 @@ jobs:
             exit 1
           fi
 
-          registry_id=$(echo $registries_json | jq -r '.registries[] | select(.name | contains("'${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}'")) | .id')
+          registry_id=$(echo $registries_json | jq -r '.registries[] | select(.name | contains("${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}")) | .id')
 
           echo "✅ Registry [$registry_id] encontrado: $registry_id"
 
