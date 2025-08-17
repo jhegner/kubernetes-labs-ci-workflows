@@ -115,7 +115,7 @@ jobs:
             exit 1
           fi
 
-          echo "✅ Cluster [$cluster_id] encontrado: $cluster_id"
+          echo "✅ Cluster encontrado: $cluster_id"
 
           echo "CLUSTER_ID=${cluster_id}" >> "$GITHUB_ENV"
 
@@ -168,19 +168,26 @@ jobs:
           kubectl get nodes
           echo "✅ Acesso ao cluster verificado com sucesso."
 
-      # - name: 🔄 Substitui a imagem gerada para o deployment
-      #   run: |
+          echo "🎉 Configuração concluída com sucesso!"
 
-      #     #export IMAGE_NAME="${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}
-      #     export IMAGE_NAME="ewr.vultrcr.com/kuberneteslabcontainerregistry/kubernetes-labs-app-micronout"
-      #     export IMAGE_TAG="develop"
+      - name: 🔄 Substitui a imagem gerada para o deployment
+        run: |
 
-      #     mv infra/kubernetes.yaml infra/kubernetes.yaml.template
-      #     envsubst < infra/kubernetes.yaml.template > infra/kubernetes.yaml
+          export IMAGE_NAME="${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}
+          #export IMAGE_NAME="ewr.vultrcr.com/kuberneteslabcontainerregistry/kubernetes-labs-app-micronout"
+          export IMAGE_TAG="develop"
 
-      # - name: 🎯 Deploy dos manifestos
-      #   run: |
-      #     kubectl apply -f infra/kubernetes.yaml
+          mv infra/kubernetes.yaml infra/kubernetes.yaml.template
+          envsubst < infra/kubernetes.yaml.template > infra/kubernetes.yaml
+
+      - name: 🎯 Deploy dos manifestos
+        run: |
+          echo "EXEC 1 pwd"
+          pwd
+          echo "EXEC 2 ls -la"
+          ls -la
+          echo "EXEC 3 apply"
+          kubectl apply -f infra/kubernetes.yaml
 
   send-notification:
     name: 📩 Send notification for developers
