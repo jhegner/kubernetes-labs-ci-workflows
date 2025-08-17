@@ -137,12 +137,9 @@ jobs:
       - name: 🔑 Gera credenciais temporárias do registry
         run: |
 
-          expiry_seconds_time="60" # Tempo de expiração em segundos
+          #echo "REGISTRY_ID: $REGISTRY_ID"
 
-          echo "REGISTRY_ID: $REGISTRY_ID"
-
-          config_json=$(curl --request OPTIONS --url 'https://api.vultr.com/v2/registry/$REGISTRY_ID/docker-credentials/kubernetes?\
-            expiry_seconds=$expiry_seconds_time&read_write=true&base64_encode=true' --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')
+          config_json=$(curl --request OPTIONS --url 'https://api.vultr.com/v2/registry/$REGISTRY_ID/docker-credentials/kubernetes?expiry_seconds=60&read_write=true&base64_encode=true' --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')
 
           kubeconfig_base64=$(echo "$config_json" | jq -r '.yaml_b64')          
 
