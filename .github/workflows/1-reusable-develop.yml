@@ -141,7 +141,7 @@ jobs:
 
           echo "Consultando kubeconfig para o cluster: $CLUSTER_ID"
   
-          config_json=$(curl --request GET --url "ttps://api.vultr.com/v2/kubernetes/clusters/$CLUSTER_ID/config" \
+          config_json=$(curl --request GET --url "https://api.vultr.com/v2/kubernetes/clusters/$CLUSTER_ID/config" \
             --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')
 
           echo "RESPONSE: $config_json"
