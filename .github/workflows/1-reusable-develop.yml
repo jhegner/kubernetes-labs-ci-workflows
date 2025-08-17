@@ -173,8 +173,7 @@ jobs:
       - name: 🔄 Substitui a imagem gerada para o deployment
         run: |
 
-          export IMAGE_NAME="${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}
-          #export IMAGE_NAME="ewr.vultrcr.com/kuberneteslabcontainerregistry/kubernetes-labs-app-micronout"
+          export IMAGE_NAME="${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}"
           export IMAGE_TAG="develop"
 
           mv infra/kubernetes.yaml infra/kubernetes.yaml.template
