@@ -1,0 +1,120 @@
+{
+    "vke_clusters": [
+        {
+            "id": "94dfbe8e-7e13-4981-a9f0-374e8a967670",
+            "firewall_group_id": "06f0eca4-dd0c-4a0b-b74e-f945d94e04df",
+            "label": "kubernetes-labs-cluster",
+            "date_created": "2025-08-16T18:10:42+00:00",
+            "cluster_subnet": "10.244.0.0\/16",
+            "service_subnet": "10.96.0.0\/12",
+            "ip": "144.202.29.121",
+            "endpoint": "94dfbe8e-7e13-4981-a9f0-374e8a967670.vultr-k8s.com",
+            "version": "v1.33.0+3",
+            "region": "atl",
+            "status": "active",
+            "ha_controlplanes": false,
+            "oidc": null,
+            "node_pools": [
+                {
+                    "id": "dc44a79c-4796-465b-921b-98a2dc82e9ae",
+                    "date_created": "2025-08-16T18:10:44+00:00",
+                    "date_updated": "2025-08-16T18:12:13+00:00",
+                    "label": "development",
+                    "tag": "tf-vke-default",
+                    "plan": "vc2-1c-2gb",
+                    "status": "active",
+                    "min_nodes": 1,
+                    "max_nodes": 1,
+                    "auto_scaler": false,
+                    "node_quantity": 1,
+                    "user_data": "",
+                    "labels": {
+                        "env": "dev",
+                        "lab": "kubernetes-labs",
+                        "tag": "development",
+                        "plan": "vc2-1c-2gb",
+                        "team": "infra",
+                        "region": "atl",
+                        "cluster": "labs-infra-cluster"
+                    },
+                    "taints": null,
+                    "nodes": [
+                        {
+                            "id": "c311319e-77a1-4152-9c6c-79f8861a0dbf",
+                            "label": "development-58d40f909a68",
+                            "date_created": "2025-08-16T18:10:45+00:00",
+                            "status": "active"
+                        }
+                    ]
+                },
+                {
+                    "id": "c983f256-2bf3-46a0-b915-b8ed657d1711",
+                    "date_created": "2025-08-16T18:12:18+00:00",
+                    "date_updated": "2025-08-16T18:16:06+00:00",
+                    "label": "production",
+                    "tag": "production",
+                    "plan": "vc2-2c-4gb",
+                    "status": "active",
+                    "min_nodes": 1,
+                    "max_nodes": 1,
+                    "auto_scaler": false,
+                    "node_quantity": 2,
+                    "user_data": "",
+                    "labels": {
+                        "env": "prod",
+                        "lab": "kubernetes-labs",
+                        "tag": "production",
+                        "plan": "vc2-2c-4gb",
+                        "team": "infra",
+                        "region": "atl",
+                        "cluster": "labs-infra-cluster"
+                    },
+                    "taints": null,
+                    "nodes": [
+                        {
+                            "id": "0947c12d-baaa-47de-964b-27174ed9705f",
+                            "label": "production-7b0a80afe8cf",
+                            "date_created": "2025-08-16T18:12:19+00:00",
+                            "status": "active"
+                        },
+                        {
+                            "id": "1a36af0d-ade8-4d11-b744-0d54b638f6cc",
+                            "label": "production-9a54c8c0f61a",
+                            "date_created": "2025-08-16T18:12:20+00:00",
+                            "status": "active"
+                        }
+                    ]
+                }
+            ],
+            "vpcs": [
+                {
+                    "id": "95a40ba6-3e9e-4b8e-b9ef-5da2cf2a7a55",
+                    "version": 1,
+                    "subnet": "192.168.0.3"
+                },
+                {
+                    "id": "95a40ba6-3e9e-4b8e-b9ef-5da2cf2a7a55",
+                    "version": 1,
+                    "subnet": "192.168.0.4"
+                },
+                {
+                    "id": "95a40ba6-3e9e-4b8e-b9ef-5da2cf2a7a55",
+                    "version": 1,
+                    "subnet": "192.168.0.5"
+                },
+                {
+                    "id": "95a40ba6-3e9e-4b8e-b9ef-5da2cf2a7a55",
+                    "version": 1,
+                    "subnet": "192.168.0.6"
+                }
+            ]
+        }
+    ],
+    "meta": {
+        "total": 1,
+        "links": {
+            "next": "",
+            "prev": ""
+        }
+    }
+}

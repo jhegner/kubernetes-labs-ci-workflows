@@ -35,58 +35,61 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source code
-        uses: actions/checkout@v4
+      # - name: Checkout source code
+      #   uses: actions/checkout@v4
 
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}
-          tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}.{{patch}}
-            type=sha
+      # - name: Docker meta
+      #   id: meta
+      #   uses: docker/metadata-action@v5
+      #   with:
+      #     images: ${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}
+      #     tags: |
+      #       type=ref,event=branch
+      #       type=ref,event=pr
+      #       type=semver,pattern={{version}}
+      #       type=semver,pattern={{major}}.{{minor}}.{{patch}}
+      #       type=sha
 
-      - name: Log in to Vultr Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}
-          username: ${{ secrets.VULTR_REGISTRY_USERNAME }}
-          password: ${{ secrets.VULTR_REGISTRY_PASSWORD }}
-          logout: true
+      # - name: Log in to Vultr Container Registry
+      #   uses: docker/login-action@v3
+      #   with:
+      #     registry: ${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}
+      #     username: ${{ secrets.VULTR_REGISTRY_USERNAME }}
+      #     password: ${{ secrets.VULTR_REGISTRY_PASSWORD }}
+      #     logout: true
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      # - name: Set up Docker Buildx
+      #   uses: docker/setup-buildx-action@v3
 
+      # - name: Build and Push Docker Image
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: .
+      #     file: ./Dockerfile
+      #     push: true
+      #     # A tag precisa ter o endereco do registry para login e envio senao o docker tenta enviar para o dockerhub
+      #     tags: ${{ steps.meta.outputs.tags }}
+      #     labels: ${{ steps.meta.outputs.labels }}
       - name: Build and Push Docker Image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          # A tag precisa ter o endereco do registry para login e envio senao o docker tenta enviar para o dockerhub
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+        run: echo "Build and Push Docker Image step is not configured yet. Please add the necessary steps to build and push the image."
 
   scan-trivy:
     name: 🐺 Scan container vulnerability com Trivy
     runs-on: ubuntu-latest
     needs: build-container-image
-    if: false # desabilitado temporariamente
 
     steps:
+      # - name: Run Trivy vulnerability scanner
+      #   uses: aquasecurity/trivy-action@master
+      #   with:
+      #     image-ref: "${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}:develop"
+      #     format: "table"
+      #     exit-code: "1"
+      #   env:
+      #     TRIVY_USERNAME: ${{ secrets.VULTR_REGISTRY_USERNAME }}
+      #     TRIVY_PASSWORD: ${{ secrets.VULTR_REGISTRY_PASSWORD }}
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: "${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}:develop"
-          format: "table"
-          exit-code: "1"
-        env:
-          TRIVY_USERNAME: ${{ secrets.VULTR_REGISTRY_USERNAME }}
-          TRIVY_PASSWORD: ${{ secrets.VULTR_REGISTRY_PASSWORD }}
+        run: echo "Trivy vulnerability scanner is not configured yet. Please add the necessary steps to scan the image."  
 
   deployment:
     name: ⚙️ Deployment container to kubernetes cluster
@@ -99,8 +102,6 @@ jobs:
 
           clusters_json=$(curl --request GET --url 'https://api.vultr.com/v2/kubernetes/clusters' \
             --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')
-
-          #echo "clusters_json --> ${clusters_json}"
 
           if [ "$(echo "$clusters_json" | jq '.vke_clusters | length')" -eq 0 ]; then
             echo "❌ Não foi encontrado clusters provisionados no ambiente."
@@ -173,7 +174,8 @@ jobs:
       - name: 🔄 Substitui a imagem gerada para o deployment
         run: |
 
-          export IMAGE_NAME="${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}
+          #export IMAGE_NAME="${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}
+          export IMAGE_NAME="ewr.vultrcr.com/kuberneteslabcontainerregistry/kubernetes-labs-app-micronout"
           export IMAGE_TAG="develop"
 
           mv infra/kubernetes.yaml infra/kubernetes.yaml.template

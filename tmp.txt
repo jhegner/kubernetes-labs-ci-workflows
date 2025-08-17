@@ -1,0 +1,3 @@
+registries_json=$(curl --request GET --url "https://api.vultr.com/v2/registries" \
+          --header 'Authorization: Bearer $VULTR_API_KEY')  
+echo "saida -- registries_json:" "$registries_json"          
