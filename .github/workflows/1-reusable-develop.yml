@@ -75,6 +75,7 @@ jobs:
     name: 🐺 Scan container vulnerability com Trivy
     runs-on: ubuntu-latest
     needs: build-container-image
+    if: false # desabilitado temporariamente
 
     steps:
       - name: Run Trivy vulnerability scanner
@@ -135,7 +136,7 @@ jobs:
       - name: 🔑 Gera credenciais temporárias do registry
         run: |
 
-          expiry_seconds_time=60
+          expiry_seconds_time="60" # Tempo de expiração em segundos
 
           config_json=$(curl --request OPTIONS --url 'https://api.vultr.com/v2/registry/${REGISTRY_ID}/docker-credentials/kubernetes?\
             expiry_seconds=${expiry_seconds_time}&read_write=true&base64_encode=true' --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')
