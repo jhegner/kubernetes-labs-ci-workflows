@@ -38,38 +38,37 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      # - name: Docker meta
-      #   id: meta
-      #   uses: docker/metadata-action@v5
-      #   with:
-      #     images: ${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}
-      #     tags: |
-      #       type=ref,event=branch
-      #       type=ref,event=pr
-      #       type=semver,pattern={{version}}
-      #       type=semver,pattern={{major}}.{{minor}}.{{patch}}
-      #       type=sha
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}.{{patch}}
+            type=sha
 
-      # - name: Log in to Vultr Container Registry
-      #   uses: docker/login-action@v3
-      #   with:
-      #     registry: ${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}
-      #     username: ${{ secrets.VULTR_REGISTRY_USERNAME }}
-      #     password: ${{ secrets.VULTR_REGISTRY_PASSWORD }}
-      #     logout: true
+      - name: Log in to Vultr Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}
+          username: ${{ secrets.VULTR_REGISTRY_USERNAME }}
+          password: ${{ secrets.VULTR_REGISTRY_PASSWORD }}
+          logout: true
 
-      # - name: Set up Docker Buildx
-      #   uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      # - name: Build and Push Docker Image
-      #   uses: docker/build-push-action@v5
-      #   with:
-      #     context: .
-      #     file: ./Dockerfile
-      #     push: true
-      #     # A tag precisa ter o endereco do registry para login e envio senao o docker tenta enviar para o dockerhub
-      #     tags: ${{ steps.meta.outputs.tags }}
-      #     labels: ${{ steps.meta.outputs.labels }}
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true    
+          tags: ${{ steps.meta.outputs.tags }} # A tag precisa ter o endereco do registry para login e envio senao o docker tenta enviar para o dockerhub
+          labels: ${{ steps.meta.outputs.labels }}
       - name: Build and Push Docker Image
         run: echo "Build and Push Docker Image step is not configured yet. Please add the necessary steps to build and push the image."
 
@@ -79,17 +78,15 @@ jobs:
     needs: build-container-image
 
     steps:
-      # - name: Run Trivy vulnerability scanner
-      #   uses: aquasecurity/trivy-action@master
-      #   with:
-      #     image-ref: "${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}:develop"
-      #     format: "table"
-      #     exit-code: "1"
-      #   env:
-      #     TRIVY_USERNAME: ${{ secrets.VULTR_REGISTRY_USERNAME }}
-      #     TRIVY_PASSWORD: ${{ secrets.VULTR_REGISTRY_PASSWORD }}
       - name: Run Trivy vulnerability scanner
-        run: echo "Trivy vulnerability scanner is not configured yet. Please add the necessary steps to scan the image."  
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}:develop"
+          format: "table"
+          exit-code: "1"
+        env:
+          TRIVY_USERNAME: ${{ secrets.VULTR_REGISTRY_USERNAME }}
+          TRIVY_PASSWORD: ${{ secrets.VULTR_REGISTRY_PASSWORD }}
 
   deployment:
     name: ⚙️ Deployment container to kubernetes cluster
@@ -99,7 +96,7 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
-              
+
       - name: 🔍 Consulta clusters provisionados
         run: |
 
@@ -152,15 +149,15 @@ jobs:
             exit 1
           fi
 
-          echo "KUBECONFIG_BASE64=${kubeconfig_base64}" >> "$GITHUB_ENV"  
-          
-          echo "::add-mask::$KUBECONFIG_BASE64"
+          echo "KUBECONFIG_BASE64=${kubeconfig_base64}" >> "$GITHUB_ENV"                    
 
           echo "✅ kube_config Base64 obtido com sucesso."
 
       - name: ⚙️ Configura kubeconfig para acesso ao cluster
         run: |          
 
+          echo "::add-mask::$KUBECONFIG_BASE64"
+        
           mkdir -p ~/.kube
           echo "${KUBECONFIG_BASE64}" | base64 -d > ~/.kube/config
           chmod 600 ~/.kube/config
@@ -178,25 +175,24 @@ jobs:
       - name: 🔄 Substitui a imagem gerada por template no manifesto
         run: |
 
+          echo "::add-mask::$KUBECONFIG_BASE64"          
+
           export IMAGE_NAME="${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}"
           export IMAGE_TAG="develop"
-
-          echo "EXEC 1 pwd"
-          pwd
-          echo "EXEC 2 ls -la"
-          ls -la          
 
           mv infra/kubernetes.yaml infra/kubernetes.yaml.template
           envsubst < infra/kubernetes.yaml.template > infra/kubernetes.yaml
 
+          echo "✅ Manifesto atualizado com a imagem: $IMAGE_NAME:$IMAGE_TAG"          
+
       - name: 🎯 Deploy dos manifestos
         run: |
-          echo "EXEC 1 pwd"
-          pwd
-          echo "EXEC 2 ls -la"
-          ls -la
-          echo "EXEC 3 apply"
+
+          echo "::add-mask::$KUBECONFIG_BASE64"
+          
           kubectl apply -f infra/kubernetes.yaml
+
+          echo "✅ Manifesto aplicado com sucesso"
 
   send-notification:
     name: 📩 Send notification for developers
