@@ -137,15 +137,15 @@ jobs:
       - name: 🔑 Gera credenciais temporárias do registry
         run: |
   
-          config_json=$(curl --request OPTIONS --url \
-            'https://api.vultr.com/v2/registry/$REGISTRY_ID/docker-credentials/kubernetes?expiry_seconds=120&read_write=true&base64_encode=true' \
+          config_json=$(curl --request OPTIONS \
+            --url "https://api.vultr.com/v2/registry/$REGISTRY_ID/docker-credentials/kubernetes?expiry_seconds=120&read_write=true&base64_encode=true" \
             --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')
 
           kubeconfig_base64=$(echo "$config_json" | jq -r '.yaml_b64')          
 
           echo "kubeconfig_base64 -> $kubeconfig_base64"
 
-          if [[ -z "$kubeconfig_base64" ]]; then
+          if [[ "$kubeconfig_base64" == "null" || -z "$kubeconfig_base64" ]]; then
             echo "❌ Não foi encontrado configuracoes geradas para kubeconfig."
             exit 1
           fi
