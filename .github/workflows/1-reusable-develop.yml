@@ -155,34 +155,44 @@ jobs:
       - name: ⚙️ Configura kubeconfig para acesso ao cluster
         run: |
 
+          echo "PASSEI 1"
+
           mkdir -p ~/.kube
+          
+          echo "PASSEI 2"
+
           echo "${KUBECONFIG_BASE64}" | base64 -d > ~/.kube/config"
+
+          echo "PASSEI 3"
+
           chmod 600 ~/.kube/config
 
-          echo "✅ Arquivo kubeconfig criado: ~/.kube/config"
+          echo "PASSEI 4"
 
-          export KUBECONFIG=~/.kube/config
-          source ~/.bashrc
-          echo "✅ Contexto configurado"
+          # echo "✅ Arquivo kubeconfig criado: ~/.kube/config"
 
-          kubectl get nodes
-          echo "✅ Acesso ao cluster verificado com sucesso."
+          # export KUBECONFIG=~/.kube/config
+          # source ~/.bashrc
+          # echo "✅ Contexto configurado"
 
-          echo "✅ Configuração concluída com sucesso!"
+          # kubectl get nodes
+          # echo "✅ Acesso ao cluster verificado com sucesso."
 
-      - name: 🔄 Substitui a imagem gerada para o deployment
-        run: |
+          # echo "✅ Configuração concluída com sucesso!"
 
-          #export IMAGE_NAME="${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}
-          export IMAGE_NAME="ewr.vultrcr.com/kuberneteslabcontainerregistry/kubernetes-labs-app-micronout"
-          export IMAGE_TAG="develop"
+      # - name: 🔄 Substitui a imagem gerada para o deployment
+      #   run: |
 
-          mv infra/kubernetes.yaml infra/kubernetes.yaml.template
-          envsubst < infra/kubernetes.yaml.template > infra/kubernetes.yaml
+      #     #export IMAGE_NAME="${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}
+      #     export IMAGE_NAME="ewr.vultrcr.com/kuberneteslabcontainerregistry/kubernetes-labs-app-micronout"
+      #     export IMAGE_TAG="develop"
 
-      - name: 🎯 Deploy dos manifestos
-        run: |
-          kubectl apply -f infra/kubernetes.yaml
+      #     mv infra/kubernetes.yaml infra/kubernetes.yaml.template
+      #     envsubst < infra/kubernetes.yaml.template > infra/kubernetes.yaml
+
+      # - name: 🎯 Deploy dos manifestos
+      #   run: |
+      #     kubectl apply -f infra/kubernetes.yaml
 
   send-notification:
     name: 📩 Send notification for developers
