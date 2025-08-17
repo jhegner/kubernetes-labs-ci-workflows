@@ -35,8 +35,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # - name: Checkout source code
-      #   uses: actions/checkout@v4
+      - name: Checkout source code
+        uses: actions/checkout@v4
 
       # - name: Docker meta
       #   id: meta
@@ -156,6 +156,8 @@ jobs:
       - name: ⚙️ Configura kubeconfig para acesso ao cluster
         run: |
 
+          echo "::add-mask::$KUBECONFIG_BASE64"
+
           mkdir -p ~/.kube
           echo "${KUBECONFIG_BASE64}" | base64 -d > ~/.kube/config
           chmod 600 ~/.kube/config
@@ -170,11 +172,16 @@ jobs:
 
           echo "🎉 Configuração concluída com sucesso!"
 
-      - name: 🔄 Substitui a imagem gerada para o deployment
+      - name: 🔄 Substitui a imagem gerada por template no manifesto
         run: |
 
           export IMAGE_NAME="${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}"
           export IMAGE_TAG="develop"
+
+          echo "EXEC 1 pwd"
+          pwd
+          echo "EXEC 2 ls -la"
+          ls -la          
 
           mv infra/kubernetes.yaml infra/kubernetes.yaml.template
           envsubst < infra/kubernetes.yaml.template > infra/kubernetes.yaml
