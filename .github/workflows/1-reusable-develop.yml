@@ -99,7 +99,7 @@ jobs:
           clusters_json=$(curl --request GET --url 'https://api.vultr.com/v2/kubernetes/clusters' \
             --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')
 
-          echo "clusters_json --> ${clusters_json}"
+          #echo "clusters_json --> ${clusters_json}"
 
           if [ "$(echo "$clusters_json" | jq '.vke_clusters | length')" -eq 0 ]; then
             echo "❌ Não foi encontrado clusters provisionados no ambiente."
@@ -119,25 +119,25 @@ jobs:
         run: |
 
           registries_json=$(curl --request GET --url 'https://api.vultr.com/v2/registries' \
-          --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')              
+            --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')              
 
           if [ "$(echo "$registries_json" | jq '.registries | length')" -eq 0 ]; then
             echo "❌ Não foi encontrado registries provisionados no ambiente."
             exit 1
           fi
 
-          REGISTRY_ID=$(echo $registries_json | jq -r '.registries[] | select(.name | contains("'${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}'")) | .id')
+          registry_id=$(echo $registries_json | jq -r '.registries[] | select(.name | contains("'${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}'")) | .id')
 
-          echo "REGISTRY_ID >> "$GITHUB_ENV"
+          echo "REGISTRY_ID=${registry_id}" >> "$GITHUB_ENV"
 
-          echo "✅ Registry encontrado: $REGISTRY_ID"
+          echo "✅ Registry encontrado: ${REGISTRY_ID}"
 
       - name: 🔑 Gera credenciais temporárias do registry
         run: |
 
           expiry_seconds_time=60
 
-          config_json=$(curl --request OPTIONS --url 'https://api.vultr.com/v2/registry/${REGISTRY_ID}/docker-credentials/kubernetes? \
+          config_json=$(curl --request OPTIONS --url 'https://api.vultr.com/v2/registry/${REGISTRY_ID}/docker-credentials/kubernetes?\
             expiry_seconds=${expiry_seconds_time}&read_write=true&base64_encode=true' --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')
 
           kubeconfig_base64=$(echo "$config_json" | jq -r '.yaml_b64')          
