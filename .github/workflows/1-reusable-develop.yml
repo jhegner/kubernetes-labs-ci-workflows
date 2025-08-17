@@ -143,8 +143,6 @@ jobs:
 
           kubeconfig_base64=$(echo "$config_json" | jq -r '.yaml_b64')          
 
-          echo "kubeconfig_base64 -> $kubeconfig_base64"
-
           if [[ "$kubeconfig_base64" == "null" || -z "$kubeconfig_base64" ]]; then
             echo "❌ Não foi encontrado configuracoes geradas para kubeconfig."
             exit 1
@@ -157,12 +155,8 @@ jobs:
       - name: ⚙️ Configura kubeconfig para acesso ao cluster
         run: |
 
-          # export VKE_CLUSTER_KUBECONFIG_BASE64=${KUBECONFIG_BASE64}
-
-          echo "KUBECONFIG_BASE64 -> $KUBECONFIG_BASE64"
-
           mkdir -p ~/.kube
-          echo "$KUBECONFIG_BASE64" | base64 -d > ~/.kube/config"
+          echo "${KUBECONFIG_BASE64}" | base64 -d > ~/.kube/config"
           chmod 600 ~/.kube/config
 
           echo "✅ Arquivo kubeconfig criado: ~/.kube/config"
