@@ -155,30 +155,22 @@ jobs:
       - name: ⚙️ Configura kubeconfig para acesso ao cluster
         run: |
 
-          echo "PASSEI 1"
+          mkdir -p ~/.kube        
 
-          mkdir -p ~/.kube
-          
-          echo "PASSEI 2"
-
-          echo "${KUBECONFIG_BASE64}" | base64 -d > ~/.kube/config"
-
-          echo "PASSEI 3"
+          echo "${KUBECONFIG_BASE64}" | base64 -d > ~/.kube/config
 
           chmod 600 ~/.kube/config
 
-          echo "PASSEI 4"
+          echo "✅ Arquivo kubeconfig criado: ~/.kube/config"
 
-          # echo "✅ Arquivo kubeconfig criado: ~/.kube/config"
+          export KUBECONFIG=~/.kube/config
+          source ~/.bashrc
+          echo "✅ Contexto configurado"
 
-          # export KUBECONFIG=~/.kube/config
-          # source ~/.bashrc
-          # echo "✅ Contexto configurado"
+          kubectl get nodes
+          echo "✅ Acesso ao cluster verificado com sucesso."
 
-          # kubectl get nodes
-          # echo "✅ Acesso ao cluster verificado com sucesso."
-
-          # echo "✅ Configuração concluída com sucesso!"
+          echo "✅ Configuração concluída com sucesso!"
 
       # - name: 🔄 Substitui a imagem gerada para o deployment
       #   run: |
