@@ -232,6 +232,6 @@ jobs:
             "title": "Auto PR: Merge ${{ inputs.source-branch }} into main",
             "head": "${{ inputs.source-branch }}",
             "base": "main",
-            "body": "🤖 PR automático gerado após análise bem-sucedida."
+            "body": "🤖 PR automático gerado após deploy bem-sucedida."
           }
           EOF
