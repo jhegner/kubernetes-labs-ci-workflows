@@ -70,7 +70,7 @@ jobs:
     name: ⚙️ Deployment manifestos de config do workload das apps no cluster
     runs-on: ubuntu-latest
     needs: terraform-execute
-    if: ${{ inputs.have-workload-config-manifests == 'true' }}
+    if: ${{ inputs.have-workload-config-manifests == true }}
 
     steps:
       
