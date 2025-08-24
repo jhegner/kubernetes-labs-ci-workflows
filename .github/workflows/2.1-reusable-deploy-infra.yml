@@ -138,11 +138,16 @@ jobs:
 
           echo "🎉 Configuração concluída com sucesso!"
 
-      - name: 🎯 Deploy dos manifestos
+      - name: 🧪 Verifica pastas 
         run: |
+          pwd
+          ls -la modules/workload
 
-          echo "::add-mask::$KUBECONFIG_BASE64"
+      # - name: 🎯 Deploy dos manifestos
+      #   run: |
+
+      #     echo "::add-mask::$KUBECONFIG_BASE64"
           
-          kubectl apply -f workload/0-namespace.yml
+      #     kubectl apply -f workload/0-namespace.yml
 
-          echo "✅ Manifesto aplicado com sucesso"        
+      #     echo "✅ Manifesto aplicado com sucesso"        
