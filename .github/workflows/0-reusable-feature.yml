@@ -17,7 +17,7 @@ on:
       SONAR_KEY:
         required: true
       MOCKAPI_PROJECT_SECRET:
-        required: false        
+        required: false
 
 jobs:
   build-and-analyze:
@@ -26,7 +26,7 @@ jobs:
     env:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       SONAR_KEY: ${{ secrets.SONAR_KEY }}
-      MOCKAPI_PROJECT_SECRET: ${{ secrets.MOCKAPI_PROJECT_SECRET }}      
+      MOCKAPI_PROJECT_SECRET: ${{ secrets.MOCKAPI_PROJECT_SECRET }}
     steps:
       - name: Checkout do código
         uses: actions/checkout@v4
@@ -56,7 +56,7 @@ jobs:
         run: mvn verify sonar:sonar -Dsonar.login=$SONAR_TOKEN -Dsonar.organization=$SONAR_KEY -Dsonar.projectKey=$SONAR_KEY
 
   create-pr:
-    name: Create PR from feature to develop
+    name: 👨‍💻Create PR from feature to develop
     needs: build-and-analyze
     runs-on: ubuntu-latest
     steps:
