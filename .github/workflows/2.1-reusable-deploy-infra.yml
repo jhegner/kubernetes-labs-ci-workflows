@@ -141,6 +141,7 @@ jobs:
       - name: 🧪 Verifica pastas 
         run: |
           pwd
+          ls -la
           ls -la modules/workload
 
       # - name: 🎯 Deploy dos manifestos
