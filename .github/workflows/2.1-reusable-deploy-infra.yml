@@ -138,13 +138,7 @@ jobs:
 
           echo "🎉 Configuração concluída com sucesso!"
 
-        # - name: 🧪 Verifica pastas 
-        #   run: |
-        #     pwd
-        #     ls -la
-        #     ls -la modules/workload
-
-      - name: 🎯 Deploy dos manifestos
+      - name: 🎯 Deploy dos manifestos (kube apply)
         run: |
 
           echo "::add-mask::$KUBECONFIG_BASE64"
