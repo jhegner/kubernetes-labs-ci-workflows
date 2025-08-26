@@ -2,7 +2,6 @@ name: CI/CD Infra Reusable Workflow - Deploy
 
 on:
   workflow_call:
-    
     inputs:
       bucket-tf-backend-name:
         required: true
@@ -10,14 +9,14 @@ on:
       key-tf-backend-name:
         required: true
         type: string
-      cluster-name:        
+      cluster-name:
         default: "kubernetes-labs-cluster"
         type: string
       have-workload-config-manifests:
         required: false
         type: boolean
         default: false
-                
+
     secrets:
       VULTR_API_KEY:
         required: true
@@ -30,14 +29,13 @@ on:
         required: true
 
 jobs:
-
   terraform-execute:
     name: 🦾 Terraform execute deploy infra
     runs-on: ubuntu-latest
     env:
       TF_LOG: TRACE
       TF_VAR_VULTR_API_KEY: ${{ secrets.VULTR_API_KEY }}
-      TF_VAR_VULTR_SSH_PUBLIC_KEY: ${{ secrets.VULTR_SSH_PUBLIC_KEY }}      
+      TF_VAR_VULTR_SSH_PUBLIC_KEY: ${{ secrets.VULTR_SSH_PUBLIC_KEY }}
 
     steps:
       - name: Checkout repository
@@ -60,11 +58,11 @@ jobs:
         run: terraform validate
 
       - name: Terraform Plan
-        run: terraform plan -var-file="./environments/terraform.tfvars" -out=tfplan    
+        run: terraform plan -var-file="./environments/terraform.tfvars" -out=tfplan
 
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
-        
+
   deployment:
     name: ⚙️ Deployment manifestos de config do workload das apps no cluster
     runs-on: ubuntu-latest
@@ -73,7 +71,6 @@ jobs:
     if: ${{ inputs.have-workload-config-manifests == true }}
 
     steps:
-      
       # Checkout repository with sparse checkout to get only the workload module
       - uses: actions/checkout@v4
         with:
@@ -104,7 +101,7 @@ jobs:
 
       - name: 📥 Consulta dados de acesso ao cluster (kubeconfig)
         run: |
-  
+
           config_json=$(curl --request GET --url "https://api.vultr.com/v2/kubernetes/clusters/$CLUSTER_ID/config" \
             --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')
 
@@ -115,15 +112,17 @@ jobs:
             exit 1
           fi
 
-          echo "KUBECONFIG_BASE64=${kubeconfig_base64}" >> "$GITHUB_ENV"                    
+          echo "KUBECONFIG_BASE64=${kubeconfig_base64}" >> "$GITHUB_ENV"   
+
+          echo "::add-mask::$KUBECONFIG_BASE64"          
 
           echo "✅ kube_config Base64 obtido com sucesso."
 
       - name: ⚙️ Configura kubeconfig para acesso ao cluster
-        run: |          
+        run: |
 
           echo "::add-mask::$KUBECONFIG_BASE64"
-        
+
           mkdir -p ~/.kube
           echo "${KUBECONFIG_BASE64}" | base64 -d > ~/.kube/config
           chmod 600 ~/.kube/config
@@ -142,7 +141,7 @@ jobs:
         run: |
 
           echo "::add-mask::$KUBECONFIG_BASE64"
-          
+
           kubectl apply -f modules/workload/0-namespace.yml
 
           echo "✅ Manifesto aplicado com sucesso"
