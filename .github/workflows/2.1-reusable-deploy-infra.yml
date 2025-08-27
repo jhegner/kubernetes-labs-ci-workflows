@@ -132,6 +132,9 @@ jobs:
           source ~/.bashrc
           echo "✅ Contexto configurado"
 
+          echo "⌛ Aguardando alguns segundos para verificacao"
+          sleep 120s
+
           kubectl get nodes
           echo "✅ Acesso ao cluster verificado com sucesso."
 
