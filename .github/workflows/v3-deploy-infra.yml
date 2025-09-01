@@ -119,21 +119,17 @@ jobs:
           echo "✅ kube_config Base64 obtido com sucesso."
 
       - name: ⚙️ Configura kubeconfig para acesso ao cluster
-        run: |
-
-          echo "::add-mask::$KUBECONFIG_BASE64"
+        run: |          
 
           mkdir -p ~/.kube
           echo "${KUBECONFIG_BASE64}" | base64 -d > ~/.kube/config
           chmod 600 ~/.kube/config
           echo "✅ Arquivo kubeconfig criado: ~/.kube/config"
 
-          export KUBECONFIG=~/.kube/config
-
-          echo "::add-mask::$KUBECONFIG"
-
           source ~/.bashrc
           echo "✅ Contexto configurado"
+
+          echo "::add-mask::$KUBECONFIG"
 
           echo "⌛ Aguardando alguns segundos para verificacao"
           sleep 120s
@@ -142,6 +138,8 @@ jobs:
           echo "✅ Acesso ao cluster verificado com sucesso."
 
           echo "🎉 Configuração concluída com sucesso!"
+          
+          echo "::add-mask::$KUBECONFIG_BASE64"
 
       - name: 📜 Deploy helm charts
         run: |
