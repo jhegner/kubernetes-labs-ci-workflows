@@ -12,7 +12,7 @@ on:
       cluster-name:
         default: "kubernetes-labs-cluster"
         type: string
-      have-workload-config-manifests:
+      have-helm-charts:
         required: false
         type: boolean
         default: false
