@@ -119,7 +119,7 @@ jobs:
           echo "✅ kube_config Base64 obtido com sucesso."
 
       - name: ⚙️ Configura kubeconfig para acesso ao cluster
-        run: |          
+        run: |
 
           mkdir -p ~/.kube
           echo "${KUBECONFIG_BASE64}" | base64 -d > ~/.kube/config
@@ -138,12 +138,12 @@ jobs:
           echo "✅ Acesso ao cluster verificado com sucesso."
 
           echo "🎉 Configuração concluída com sucesso!"
-          
+
           echo "::add-mask::$KUBECONFIG_BASE64"
 
       - name: 📜 Deploy helm charts
         run: |
-          
+
           echo "::add-mask::$KUBECONFIG_BASE64"
 
           echo "🔧 Instalando Helm"
@@ -161,11 +161,10 @@ jobs:
           echo "✅ Helm instalado com sucesso"
 
           echo "🎯 Deploy helm chart cluster namespaces"
-          helm upgrade --install lab-infra-namespaces modules/helm/infra-namespaces
+          helm install lab-infra-namespaces ./modules/helm/infra-namespaces
 
           # echo "🎯 Deploy helm chart cluster secret"
           # helm upgrade --install my-app modules/helm/infra-secret -n labs --create-namespace
 
           # echo "🎯 Deploy helm chart crds"
           # helm upgrade --install my-app modules/workload/helm-chart -n default --create-namespace
-          
