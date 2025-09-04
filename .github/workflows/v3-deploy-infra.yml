@@ -143,25 +143,26 @@ jobs:
 
           echo "🎉 Configuração concluída com sucesso!"
 
-      - id: deploy-helm-charts
-        name: 📜 Deploy manifestos e helm charts para workload
+      - id: deploy-manifests
+        name: 🔧 Deploy manifestos para workload
         run: |
-          
-          echo "🔧 Instalando Namespaces do lab"
-          
-          chmod +x ./modules/namespace/install.sh && ./modules/namespace/install.sh
 
-          echo "🔧 Instalando CRDs do lab"
+          # Namespace labs
+          chmod +x ./modules/namespace/install.sh && ./modules/namespace/install.sh      
           
+          # CDRS
           chmod +x ./modules/cdrs/install.sh && ./modules/cdrs/install.sh
+
+
+      - id: deploy-helm-charts
+        name: 📜 Deploy helm charts para workload
+        run: |
 
           echo "⚙️ Instalando Helm"
 
-          curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
-          sudo apt-get install apt-transport-https --yes
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
-          sudo apt-get update
-          sudo apt-get install helm
+          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+          chmod 700 get_helm.sh
+          yes | ./get_helm.sh
 
           echo "⌛ Aguardando alguns segundos para verificacao"
           sleep 30s
