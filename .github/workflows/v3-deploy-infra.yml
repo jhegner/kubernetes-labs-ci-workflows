@@ -71,13 +71,16 @@ jobs:
     if: ${{ inputs.have-helm-charts == true }}
 
     steps:
-      # Checkout repository with sparse checkout to get only the workload module
-      - uses: actions/checkout@v4
+
+      - id: checkout
+        name: Checkout repository workload module
+        uses: actions/checkout@v4
         with:
           sparse-checkout: |
             modules
 
-      - name: 🔍 Consulta clusters provisionados
+      - id: get-cluster-id
+        name: 🔍 Consulta clusters provisionados
         run: |
 
           clusters_json=$(curl --request GET --url 'https://api.vultr.com/v2/kubernetes/clusters' \
@@ -99,7 +102,8 @@ jobs:
 
           echo "CLUSTER_ID=${cluster_id}" >> "$GITHUB_ENV"
 
-      - name: 📥 Consulta dados de acesso ao cluster (kubeconfig)
+      - id: get-kubeconfig
+        name: 📥 Consulta dados de acesso ao cluster (kubeconfig)
         run: |
 
           config_json=$(curl --request GET --url "https://api.vultr.com/v2/kubernetes/clusters/$CLUSTER_ID/config" \
@@ -112,24 +116,24 @@ jobs:
             exit 1
           fi
 
-          echo "KUBECONFIG_BASE64=${kubeconfig_base64}" >> "$GITHUB_ENV"   
+          echo "::add-mask::$kubeconfig_base64"
 
-          echo "::add-mask::$KUBECONFIG_BASE64"          
+          echo "KUBECONFIG_BASE64=${kubeconfig_base64}" >> "$GITHUB_OUTPUT"             
 
           echo "✅ kube_config Base64 obtido com sucesso."
 
-      - name: ⚙️ Configura kubeconfig para acesso ao cluster
+      - id: setup-kubeconfig
+        name: ⚙️ Configura kubeconfig para acesso ao cluster
         run: |
 
           mkdir -p ~/.kube
-          echo "${KUBECONFIG_BASE64}" | base64 -d > ~/.kube/config
+          echo "${{ steps.get-kubeconfig.outputs.KUBECONFIG_BASE64 }}" | base64 -d > ~/.kube/config
           chmod 600 ~/.kube/config
+
           echo "✅ Arquivo kubeconfig criado: ~/.kube/config"
 
           source ~/.bashrc
           echo "✅ Contexto configurado"
-
-          echo "::add-mask::$KUBECONFIG"
 
           echo "⌛ Aguardando alguns segundos para verificacao"
           sleep 120s
@@ -139,14 +143,19 @@ jobs:
 
           echo "🎉 Configuração concluída com sucesso!"
 
-          echo "::add-mask::$KUBECONFIG_BASE64"
-
-      - name: 📜 Deploy helm charts
+      - id: deploy-helm-charts
+        name: 📜 Deploy manifestos e helm charts para workload
         run: |
+          
+          echo "🔧 Instalando Namespaces do lab"
+          
+          chmod +x ./modules/namespace/install.sh && ./modules/namespace/install.sh
 
-          echo "::add-mask::$KUBECONFIG_BASE64"
+          echo "🔧 Instalando CRDs do lab"
+          
+          chmod +x ./modules/cdrs/install.sh && ./modules/cdrs/install.sh
 
-          echo "🔧 Instalando Helm"
+          echo "⚙️ Instalando Helm"
 
           curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
           sudo apt-get install apt-transport-https --yes
@@ -160,11 +169,11 @@ jobs:
           helm version
           echo "✅ Helm instalado com sucesso"
 
-          echo "🎯 Deploy helm chart cluster namespaces"
-          helm install lab-infra-namespaces ./modules/helm/infra-namespaces
+          echo "🚀 Realizando deploy do helm chart"
 
-          # echo "🎯 Deploy helm chart cluster secret"
-          # helm upgrade --install my-app modules/helm/infra-secret -n labs --create-namespace
+          helm install lab-infra-workload ./modules/helm/workload \
+          --set lab-secrets-eso.aws.accessKeyId=${{ secrets.AWS_ACCESS_KEY_ID }} \
+          --set lab-secrets-eso.aws.secretAccessKey=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+          --atomic --timeout 5m --namespace labs
 
-          # echo "🎯 Deploy helm chart crds"
-          # helm upgrade --install my-app modules/workload/helm-chart -n default --create-namespace
+          echo "✅ Helm chart deploy realizado com sucesso"
