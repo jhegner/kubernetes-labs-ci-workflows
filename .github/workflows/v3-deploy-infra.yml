@@ -171,7 +171,7 @@ jobs:
 
           echo "🚀 Realizando deploy do helm chart"
 
-          helm install lab-infra-workload ./modules/helm/workload \
+          helm upgrade --install lab-infra-workload ./modules/helm/ \
           --set lab-secrets-eso.aws.accessKeyId=${{ secrets.AWS_ACCESS_KEY_ID }} \
           --set lab-secrets-eso.aws.secretAccessKey=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
           --atomic --timeout 5m --namespace labs
