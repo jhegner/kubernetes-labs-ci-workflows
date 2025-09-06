@@ -136,7 +136,7 @@ jobs:
           echo "✅ Contexto configurado"
 
           echo "⌛ Aguardando alguns segundos para verificacao"
-          sleep 120s
+          sleep 60s
 
           kubectl get nodes
           echo "✅ Acesso ao cluster verificado com sucesso."
@@ -151,8 +151,7 @@ jobs:
           chmod +x ./modules/namespace/install.sh && ./modules/namespace/install.sh      
           
           # CDRS
-          chmod +x ./modules/crds/install.sh && ./modules/crds/install.sh
-
+          # chmod +x ./modules/crds/install.sh && ./modules/crds/install.sh
 
       - id: deploy-helm-charts
         name: 📜 Deploy helm charts para workload
@@ -165,16 +164,23 @@ jobs:
           yes | ./get_helm.sh
 
           echo "⌛ Aguardando alguns segundos para verificacao"
-          sleep 30s
+          sleep 15s
 
           helm version
           echo "✅ Helm instalado com sucesso"
 
           echo "🚀 Realizando deploy do helm chart"
 
+          # external-secrets
+          helm repo add external-secrets https://charts.external-secrets.io
+          helm install external-secrets external-secrets/external-secrets \
+          --namespace labs \
+          --set installCRDs=true
+          
+          # Instalação do Helm Chart para workload
           helm upgrade --install lab-infra-workload ./modules/helm/ \
           --set lab-secrets-eso.aws.accessKeyId=${{ secrets.AWS_ACCESS_KEY_ID }} \
           --set lab-secrets-eso.aws.secretAccessKey=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
           --atomic --timeout 5m --namespace labs
 
-          echo "✅ Helm chart deploy realizado com sucesso"
+          echo "✅ Helm charts instalados com sucesso"
