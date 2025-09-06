@@ -168,19 +168,21 @@ jobs:
 
           helm version
           echo "✅ Helm instalado com sucesso"
-
-          echo "🚀 Realizando deploy do helm chart"
-
+          
           # external-secrets
           helm repo add external-secrets https://charts.external-secrets.io
           helm install external-secrets external-secrets/external-secrets \
           --namespace labs \
           --set installCRDs=true
           
-          # Instalação do Helm Chart para workload
-          helm upgrade --install lab-infra-workload ./modules/helm/ \
-          --set lab-secrets-eso.aws.accessKeyId=${{ secrets.AWS_ACCESS_KEY_ID }} \
-          --set lab-secrets-eso.aws.secretAccessKey=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
-          --atomic --timeout 5m --namespace labs
+          echo "✅ Helm chart external-secrets instalado com sucesso"
 
-          echo "✅ Helm charts instalados com sucesso"
+          echo "🚀 Realizando deploy dos charts do Helm "
+
+          # Instalação do Helm Chart para workload
+          # helm upgrade --install lab-infra-workload ./modules/helm/ \
+          # --set lab-secrets-eso.aws.accessKeyId=${{ secrets.AWS_ACCESS_KEY_ID }} \
+          # --set lab-secrets-eso.aws.secretAccessKey=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+          # --atomic --timeout 5m --namespace labs
+
+          # echo "✅ Helm charts instalados com sucesso"
