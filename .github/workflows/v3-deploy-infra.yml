@@ -151,7 +151,7 @@ jobs:
           chmod +x ./modules/namespace/install.sh && ./modules/namespace/install.sh      
           
           # CDRS
-          chmod +x ./modules/cdrs/install.sh && ./modules/cdrs/install.sh
+          chmod +x ./modules/crds/install.sh && ./modules/crds/install.sh
 
 
       - id: deploy-helm-charts
