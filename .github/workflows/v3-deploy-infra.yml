@@ -16,6 +16,10 @@ on:
         required: false
         type: boolean
         default: false
+      helm-charts-namespace:
+        required: false
+        type: string
+        default: labs
 
     secrets:
       VULTR_API_KEY:
@@ -144,45 +148,60 @@ jobs:
           echo "🎉 Configuração concluída com sucesso!"
 
       - id: deploy-manifests
-        name: 🔧 Deploy manifestos para workload
+        name: 🔧 Deploy manual manifestos para setup workload
         run: |
 
           # Namespace labs
-          chmod +x ./modules/namespace/install.sh && ./modules/namespace/install.sh      
+          chmod +x ./modules/namespace-lab/install.sh && ./modules/namespace-lab/install.sh      
           
-          # CDRS
-          # chmod +x ./modules/crds/install.sh && ./modules/crds/install.sh
+          # CRDs
+          chmod +x ./modules/crds/install.sh && ./modules/crds/install.sh
 
-      - id: deploy-helm-charts
-        name: 📜 Deploy helm charts para workload
+      - id: setup-helm
+        name: ⚙️ Instalando Helm para deploy dos charts
         run: |
-
-          echo "⚙️ Instalando Helm"
 
           curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
           chmod 700 get_helm.sh
-          yes | ./get_helm.sh
+          yes | ./get_helm.sh          
 
           echo "⌛ Aguardando alguns segundos para verificacao"
           sleep 15s
 
-          helm version
-          echo "✅ Helm instalado com sucesso"
-          
-          # external-secrets
-          helm repo add external-secrets https://charts.external-secrets.io
-          helm install external-secrets external-secrets/external-secrets \
-          --namespace labs \
-          --set installCRDs=true
-          
-          echo "✅ Helm chart external-secrets instalado com sucesso"
+          helm version || {
+            echo "❌ Helm nao encontrado. Abortando."
+            exit 1
+          }
 
-          echo "🚀 Realizando deploy dos charts do Helm "
+          echo "✅ Helm instalado com sucesso": $(helm version)"
 
-          # Instalação do Helm Chart para workload
-          # helm upgrade --install lab-infra-workload ./modules/helm/ \
-          # --set lab-secrets-eso.aws.accessKeyId=${{ secrets.AWS_ACCESS_KEY_ID }} \
-          # --set lab-secrets-eso.aws.secretAccessKey=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
-          # --atomic --timeout 5m --namespace labs
+      - id: deploy-helm-charts-addons
+        name: 📜 Deploy helm charts - addons
+        run: |
 
-          # echo "✅ Helm charts instalados com sucesso"
+          echo "🚀 Iniciando deploy dos charts do Helm"
+
+          helm upgrade --install lab-helm-addons ./modules/helm/addons/ \
+            --namespace ${{ inputs.helm-charts-namespace }} \
+            --set installCRDs=true
+         
+          echo "✅ Helm charts instalados com sucesso"      
+
+
+      - id: deploy-helm-charts-workload
+        name: 📜 Deploy helm charts - workload
+        if: false
+        run: |
+
+          echo "🚀 Iniciando deploy dos charts do Helm"
+
+          helm upgrade --install lab-helm-workload ./modules/helm/workload/ \
+            --namespace ${{ inputs.helm-charts-namespace }} \
+            --set lab-secrets-eso.aws.accessKeyId=${{ secrets.AWS_ACCESS_KEY_ID }} \
+            --set lab-secrets-eso.aws.secretAccessKey=${{ secrets.AWS_SECRET_ACCESS_KEY }} \            
+            --set installCRDs=true
+            --atomic 
+            --timeout 5m
+
+          echo "✅ Helm charts instalados com sucesso"
+
