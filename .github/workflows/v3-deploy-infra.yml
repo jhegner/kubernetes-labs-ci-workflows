@@ -236,7 +236,7 @@ jobs:
 
           helm install lab-helm-workload ./modules/helm/workload/ \
             --namespace ${{ inputs.helm-charts-namespace }} \       
-            --set installCRDs=true \
+            --set installCRDs=true 
 
           echo "✅ Helm charts instalados com sucesso"
 
