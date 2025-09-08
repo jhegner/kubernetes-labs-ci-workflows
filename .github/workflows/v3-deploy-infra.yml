@@ -154,15 +154,12 @@ jobs:
       - id: deploy-manifests
         name: 🔧 Deploy manual manifestos para setup
         run: |
-
-          # Namespace labs
-          chmod +x ./modules/namespace_lab/install.sh && ./modules/namespace_lab/install.sh      
           
           # CRDs
           chmod +x ./modules/crds/install.sh && ./modules/crds/install.sh
 
       - id: setup-helm
-        name: ⚙️ Instalando Helm para deploy dos charts
+        name: ⚙️ Instalando Helm
         run: |
 
           curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
@@ -179,8 +176,22 @@ jobs:
 
           echo "✅ Helm instalado com sucesso": $(helm version)"
 
+      - id: deploy-helm-charts-configmap
+        name: 📜 Deploy helm charts - configmap
+        run: |
+
+          # step que cria o namespace padrao do lab senao existir
+
+          echo "🚀 Iniciando deploy dos charts do Helm"
+
+          helm upgrade --install lab-helm-configmap ./modules/helm/configmap/            
+            --namespace ${{ inputs.helm-charts-namespace }}
+            --create-namespace
+         
+          echo "✅ Helm charts instalados com sucesso"          
+
       - id: deploy-helm-charts-secrets
-        name: 📜 Deploy helm charts - secrets e rbac
+        name: 📜 Deploy helm charts - secrets
         run: |
 
           echo "🚀 Iniciando deploy dos charts do Helm"
@@ -202,8 +213,7 @@ jobs:
             --namespace ${{ inputs.helm-charts-namespace }} \
             --set installCRDs=true
          
-          echo "✅ Helm charts instalados com sucesso"      
-
+          echo "✅ Helm charts instalados com sucesso"
 
       - id: deploy-helm-charts-workload
         name: 📜 Deploy helm charts - setup workload
