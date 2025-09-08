@@ -209,7 +209,7 @@ jobs:
           helm upgrade --install lab-helm-secrets ./modules/helm/secrets/ \
             --namespace ${{ inputs.helm-charts-namespace }} \
             --set awsiam-credencial.aws.accessKey=${{ secrets.AWS_ACCESS_KEY_ID }} \
-            --set awsiam-credencial.aws.secretKey=${{ secrets.AWS_SECRET_ACCESS_KEY }} \                 
+            --set awsiam-credencial.aws.secretKey=${{ secrets.AWS_SECRET_ACCESS_KEY }}              
          
           echo "✅ Helm charts instalados com sucesso"            
 
@@ -234,8 +234,8 @@ jobs:
 
           helm upgrade --install lab-helm-workload ./modules/helm/workload/ \
             --namespace ${{ inputs.helm-charts-namespace }} \       
-            --set installCRDs=true
-            --atomic 
+            --set installCRDs=true \
+            --atomic \
             --timeout 5m
 
           echo "✅ Helm charts instalados com sucesso"
