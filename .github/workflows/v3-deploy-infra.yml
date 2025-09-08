@@ -234,13 +234,9 @@ jobs:
 
           echo "🚀 Iniciando deploy dos charts do Helm"
 
-          # helm dependency build ./modules/helm/workload/
-
-          helm upgrade --install lab-helm-workload ./modules/helm/workload/ \
+          helm install lab-helm-workload ./modules/helm/workload/ \
             --namespace ${{ inputs.helm-charts-namespace }} \       
             --set installCRDs=true \
-            --atomic \
-            --timeout 5m
 
           echo "✅ Helm charts instalados com sucesso"
 
