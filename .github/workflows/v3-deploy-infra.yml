@@ -153,7 +153,7 @@ jobs:
 
           echo "✅ Acesso ao cluster verificado com sucesso."
 
-          echo "🎉 Configuração concluída com sucesso!"
+          echo "🎉 Configuração concluida!"
 
       - id: deploy-manifests
         name: 🔧 Deploy manual manifestos para setup
@@ -178,7 +178,10 @@ jobs:
             exit 1
           }
 
-          echo "✅ Helm instalado com sucesso": $(helm version)"
+          echo "✅ Helm instalado com sucesso"
+
+          echo "🎉 Configuração concluida!"
+
 
       - id: deploy-helm-charts-configmap
         name: 📜 Deploy helm charts - configmap
