@@ -141,18 +141,22 @@ jobs:
 
           echo "⌛ Aguardando alguns segundos para verificacao"
           sleep 60s
+          
+          kubectl get nodes || {
+            echo "❌ Nos do cluster nao provisionados. Abortando..."
+            exit 1
+          }
 
-          kubectl get nodes
           echo "✅ Acesso ao cluster verificado com sucesso."
 
           echo "🎉 Configuração concluída com sucesso!"
 
       - id: deploy-manifests
-        name: 🔧 Deploy manual manifestos para setup workload
+        name: 🔧 Deploy manual manifestos para setup
         run: |
 
           # Namespace labs
-          chmod +x ./modules/namespace-lab/install.sh && ./modules/namespace-lab/install.sh      
+          chmod +x ./modules/namespace_lab/install.sh && ./modules/namespace_lab/install.sh      
           
           # CRDs
           chmod +x ./modules/crds/install.sh && ./modules/crds/install.sh
@@ -169,11 +173,24 @@ jobs:
           sleep 15s
 
           helm version || {
-            echo "❌ Helm nao encontrado. Abortando."
+            echo "❌ Helm nao encontrado. Abortando..."
             exit 1
           }
 
           echo "✅ Helm instalado com sucesso": $(helm version)"
+
+      - id: deploy-helm-charts-secrets
+        name: 📜 Deploy helm charts - secrets e rbac
+        run: |
+
+          echo "🚀 Iniciando deploy dos charts do Helm"
+
+          helm upgrade --install lab-helm-secrets ./modules/helm/secrets/ \
+            --namespace ${{ inputs.helm-charts-namespace }} \
+            --set awsiam-credencial.aws.accessKey=${{ secrets.AWS_ACCESS_KEY_ID }} \
+            --set awsiam-credencial.aws.secretKey=${{ secrets.AWS_SECRET_ACCESS_KEY }} \                 
+         
+          echo "✅ Helm charts instalados com sucesso"            
 
       - id: deploy-helm-charts-addons
         name: 📜 Deploy helm charts - addons
@@ -189,16 +206,14 @@ jobs:
 
 
       - id: deploy-helm-charts-workload
-        name: 📜 Deploy helm charts - workload
+        name: 📜 Deploy helm charts - setup workload
         if: false
         run: |
 
           echo "🚀 Iniciando deploy dos charts do Helm"
 
           helm upgrade --install lab-helm-workload ./modules/helm/workload/ \
-            --namespace ${{ inputs.helm-charts-namespace }} \
-            --set lab-secrets-eso.aws.accessKeyId=${{ secrets.AWS_ACCESS_KEY_ID }} \
-            --set lab-secrets-eso.aws.secretAccessKey=${{ secrets.AWS_SECRET_ACCESS_KEY }} \            
+            --namespace ${{ inputs.helm-charts-namespace }} \       
             --set installCRDs=true
             --atomic 
             --timeout 5m
