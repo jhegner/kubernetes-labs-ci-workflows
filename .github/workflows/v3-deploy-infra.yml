@@ -16,6 +16,10 @@ on:
         required: false
         type: boolean
         default: false
+      install-helm-charts-workload:        
+        required: true
+        type: boolean
+        default: false
       helm-charts-namespace:
         required: false
         type: string
@@ -217,7 +221,7 @@ jobs:
 
       - id: deploy-helm-charts-workload
         name: 📜 Deploy helm charts - setup workload
-        if: false
+        if: ${{ inputs.install-helm-charts-workload == true }}
         run: |
 
           echo "🚀 Iniciando deploy dos charts do Helm"
