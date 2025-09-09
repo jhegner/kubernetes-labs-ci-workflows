@@ -232,6 +232,9 @@ jobs:
         if: ${{ inputs.install-helm-charts-workload == true }}
         run: |
 
+          echo "⌛ Aguardando para instalação do release workload"
+          sleep 120s
+
           echo "🚀 Iniciando deploy dos charts do Helm"
 
           helm upgrade --install lab-helm-workload ./modules/helm/workload/ \
