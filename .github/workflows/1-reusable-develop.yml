@@ -69,8 +69,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }} # A tag precisa ter o endereco do registry para login e envio senao o docker tenta enviar para o dockerhub
           labels: ${{ steps.meta.outputs.labels }}
-      - name: Build and Push Docker Image
-        run: echo "Build and Push Docker Image step is not configured yet. Please add the necessary steps to build and push the image."
 
   scan-trivy:
     name: 🐺 Scan container vulnerability com Trivy
