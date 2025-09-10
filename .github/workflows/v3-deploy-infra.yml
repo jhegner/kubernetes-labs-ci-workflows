@@ -1,0 +1,230 @@
+name: CI/CD Infra Reusable Workflow - Deploy
+
+on:
+  workflow_call:
+    inputs:
+      bucket-tf-backend-name:
+        required: true
+        type: string
+      key-tf-backend-name:
+        required: true
+        type: string
+      cluster-name:
+        default: "kubernetes-labs-cluster"
+        type: string
+      have-helm-charts:
+        required: false
+        type: boolean
+        default: false
+      install-helm-charts-workload:        
+        required: true
+        type: boolean
+        default: false
+      helm-charts-namespace:
+        required: false
+        type: string
+        default: labs
+
+    secrets:
+      VULTR_API_KEY:
+        required: true
+      VULTR_SSH_PUBLIC_KEY:
+        required: false
+        description: "Optional SSH public key for Vultr instances"
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+
+jobs:
+  terraform-execute:
+    name: 🦾 Terraform execute deploy infra
+    runs-on: ubuntu-latest
+    env:
+      TF_LOG: TRACE
+      TF_VAR_VULTR_API_KEY: ${{ secrets.VULTR_API_KEY }}
+      TF_VAR_VULTR_SSH_PUBLIC_KEY: ${{ secrets.VULTR_SSH_PUBLIC_KEY }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init -reconfigure
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -var-file="./environments/terraform.tfvars" -out=tfplan
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
+
+  deployment:
+    name: ⚙️ Deploy manifestos de config do cluster
+    runs-on: ubuntu-latest
+    needs: terraform-execute
+
+    if: ${{ inputs.have-helm-charts == true }}
+
+    steps:
+
+      - id: checkout
+        name: Checkout repository workload module
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            modules
+
+      - id: get-cluster-id
+        name: 🔍 Consulta clusters provisionados
+        run: |
+
+          clusters_json=$(curl --request GET --url 'https://api.vultr.com/v2/kubernetes/clusters' \
+            --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')
+
+          if [ "$(echo "$clusters_json" | jq '.vke_clusters | length')" -eq 0 ]; then
+            echo "❌ Não foi encontrado clusters provisionados no ambiente."
+            exit 1
+          fi
+
+          cluster_id=$(echo $clusters_json | jq -r '.vke_clusters[] | select(.label | contains("'${{ inputs.cluster-name }}'")) | .id')
+
+          if [[ -z "$cluster_id" ]]; then
+            echo "❌ Não foi encontrado cluster com label 'kubernetes-labs-cluster'."
+            exit 1
+          fi
+
+          echo "✅ Cluster encontrado: $cluster_id"
+
+          echo "CLUSTER_ID=${cluster_id}" >> "$GITHUB_ENV"
+
+      - id: get-kubeconfig
+        name: 📥 Consulta dados de acesso ao cluster (kubeconfig)
+        run: |
+
+          config_json=$(curl --request GET --url "https://api.vultr.com/v2/kubernetes/clusters/$CLUSTER_ID/config" \
+            --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')
+
+          kubeconfig_base64=$(echo "$config_json" | jq -r '.kube_config')
+
+          if [[ "$kubeconfig_base64" == "null" || -z "$kubeconfig_base64" ]]; then
+            echo "❌ Não foi encontrado configuracoes geradas para kubeconfig."
+            exit 1
+          fi
+
+          echo "::add-mask::$kubeconfig_base64"
+
+          echo "KUBECONFIG_BASE64=${kubeconfig_base64}" >> "$GITHUB_OUTPUT"             
+
+          echo "✅ kube_config Base64 obtido com sucesso."
+
+      - id: setup-kubeconfig
+        name: ⚙️ Configura kubeconfig para acesso ao cluster
+        run: |
+
+          mkdir -p ~/.kube
+          echo "${{ steps.get-kubeconfig.outputs.KUBECONFIG_BASE64 }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+          echo "✅ Arquivo kubeconfig criado: ~/.kube/config"
+
+          source ~/.bashrc
+          echo "✅ Contexto configurado"
+
+          echo "⌛ Aguardando alguns segundos para verificacao"
+          sleep 60s
+          
+          kubectl get nodes || {
+            echo "❌ Nos do cluster nao provisionados. Abortando..."
+            exit 1
+          }
+
+          echo "✅ Acesso ao cluster verificado com sucesso."
+
+          echo "🎉 Configuração concluida!"
+
+      - id: deploy-manifests
+        name: 🔧 Deploy manual manifestos para setup
+        run: |
+
+          # Namespace labs
+          chmod +x ./modules/namespace/install.sh && ./modules/namespace/install.sh           
+          
+          # CRDs
+          chmod +x ./modules/crds/install.sh && ./modules/crds/install.sh
+
+      - id: setup-helm
+        name: ⚙️ Instalando Helm
+        run: |
+
+          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+          chmod 700 get_helm.sh
+          yes | ./get_helm.sh          
+
+          echo "⌛ Aguardando alguns segundos para verificacao"
+          sleep 15s
+
+          helm version || {
+            echo "❌ Helm nao encontrado. Abortando..."
+            exit 1
+          }
+
+          echo "✅ Helm instalado com sucesso"
+
+          echo "🎉 Configuração concluida!"          
+
+      - id: deploy-helm-charts-secrets
+        name: 📜 Deploy helm charts - secrets
+        run: |
+
+          echo "🚀 Iniciando deploy dos charts do Helm"
+
+          helm upgrade --install lab-helm-secrets ./modules/helm/secrets/ \
+            --namespace ${{ inputs.helm-charts-namespace }} \
+            --set awsiam-credencial.aws.accessKeyId=${{ secrets.AWS_ACCESS_KEY_ID }} \
+            --set awsiam-credencial.aws.secretAccessKey=${{ secrets.AWS_SECRET_ACCESS_KEY }}              
+         
+          echo "✅ Helm charts instalados com sucesso"            
+
+      - id: deploy-helm-charts-addons
+        name: 📜 Deploy helm charts - addons
+        run: |
+
+          echo "🚀 Iniciando deploy dos charts do Helm"
+
+          helm dependency build ./modules/helm/addons/
+
+          helm upgrade --install lab-helm-addons ./modules/helm/addons/ \
+            --namespace ${{ inputs.helm-charts-namespace }} \
+            --set installCRDs=true
+         
+          echo "✅ Helm charts instalados com sucesso"
+
+      - id: deploy-helm-charts-workload
+        name: 📜 Deploy helm charts - setup workload
+        if: ${{ inputs.install-helm-charts-workload == true }}
+        run: |
+
+          echo "⌛ Aguardando para instalação do release workload"
+          sleep 120s
+
+          echo "🚀 Iniciando deploy dos charts do Helm"
+
+          helm upgrade --install lab-helm-workload ./modules/helm/workload/ \
+            --namespace ${{ inputs.helm-charts-namespace }} \
+            --set installCRDs=true
+
+          echo "✅ Helm charts instalados com sucesso"
+
