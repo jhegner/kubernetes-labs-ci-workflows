@@ -79,16 +79,16 @@ jobs:
             exit 0
           fi
           
-          load_balancer_id=$(echo $load_balancers_json | jq -r '.load_balancers[] | select(.label | contains("kubernetes-labs-service-lb")) | .id')
+          load_balancer_id=$(echo $load_balancers_json | jq -r '.load_balancers[] | select(.label | contains("labs-service-lb")) | .id')
 
           if [[ -z "$load_balancer_id" ]]; then
-            echo "😉 Não foi encontrado load balancer com label 'kubernetes-labs-service-lb'."
+            echo "😉 Não foi encontrado load balancer com label 'labs-service-lb'."
             exit 0
           fi
 
-          echo "✅ Load balancer encontrado"
+          echo "✅ Load balancer encontrado ${load_balancer_id}"
 
-          echo "🔥 Removendo load balancer: $load_balancer_id"
+          echo "🔥 Removendo load balancer: ${load_balancer_id}"
 
           response_code=$(curl --request DELETE -s -o /dev/null -w "%{http_code}" --url "https://api.vultr.com/v2/load-balancers/$load_balancer_id" \
             --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')
