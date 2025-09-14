@@ -80,6 +80,11 @@ jobs:
 
     if: ${{ inputs.have-helm-charts == true }}
 
+    env:
+      SLEEP_TIME_P: 1m
+      SLEEP_TIME_M: 2m
+      SLEEP_TIME_G: 3m
+
     steps:
 
       - id: checkout
@@ -133,7 +138,7 @@ jobs:
           echo "✅ kube_config Base64 obtido com sucesso."
 
       - name: ⌛ Aguardando alguns segundos antes da execucao do proximo passo
-        run: sleep 2m
+        run: sleep ${SLEEP_TIME_P}
 
       - id: setup-kubeconfig
         name: ⚙️ Configura kubeconfig para acesso ao cluster
@@ -158,7 +163,7 @@ jobs:
           echo "🎉 Configuração concluida!"
 
       - name: ⌛ Aguardando alguns segundos antes da execucao do proximo passo
-        run: sleep 1m
+        run: sleep ${SLEEP_TIME_M}
 
       - id: deploy-manifests
         name: 🔧 Deploy manual manifestos para setup
@@ -171,7 +176,7 @@ jobs:
           chmod +x ./modules/crds/install.sh && ./modules/crds/install.sh
 
       - name: ⌛ Aguardando alguns segundos antes da execucao do proximo passo
-        run: sleep 2m
+        run: sleep ${SLEEP_TIME_M}
 
       - id: setup-helm
         name: ⚙️ Instalando Helm
@@ -191,7 +196,7 @@ jobs:
           echo "🎉 Configuração concluida!"     
           
       - name: ⌛ Aguardando alguns segundos antes da execucao do proximo passo
-        run: sleep 1m
+        run: sleep ${SLEEP_TIME_P}
 
       - id: deploy-helm-charts-secrets
         name: 📜 Deploy helm charts - secrets
@@ -207,7 +212,7 @@ jobs:
           echo "✅ Helm charts instalados com sucesso"
           
       - name: ⌛ Aguardando alguns segundos antes da execucao do proximo passo
-        run: sleep 1m
+        run: sleep ${SLEEP_TIME_P}
 
       - id: deploy-helm-charts-addons
         name: 📜 Deploy helm charts - addons
@@ -224,7 +229,7 @@ jobs:
           echo "✅ Helm charts instalados com sucesso"
 
       - name: ⌛ Aguardando alguns segundos antes da execucao do proximo passo
-        run: sleep 5m
+        run: sleep ${SLEEP_TIME_G}
 
       - id: deploy-helm-charts-workload
         name: 📜 Deploy helm charts - setup workload
@@ -235,7 +240,7 @@ jobs:
 
           helm upgrade --install lab-helm-workload ./modules/helm/workload/ \
             --namespace ${{ inputs.helm-charts-namespace }} \
-            --set installCRDs=true
+            --set installCRDs=true \
             --set mockapi-project-secret.mockapiProjectSecret=${{ secrets.MOCKAPI_PROJECT_SECRET }} \
 
           echo "✅ Helm charts instalados com sucesso"
