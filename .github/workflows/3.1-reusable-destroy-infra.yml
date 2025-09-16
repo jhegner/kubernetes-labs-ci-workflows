@@ -133,7 +133,7 @@ jobs:
             exit 0
           fi
           
-          instances_ids=$(echo $instances_json | jq -r '.instances_json[] | select(.id)')
+          instances_ids=$(echo $instances_json | jq -r '.instances_json[] | .id')
 
           if [[ -z "$instances_ids" ]]; then
             echo "😉 Nenhuma instancia encontrada para remoção."
