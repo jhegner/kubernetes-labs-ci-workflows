@@ -86,7 +86,7 @@ jobs:
             exit 0
           fi
           
-          load_balancer_ids=$(echo $load_balancers_json | jq -r '.load_balancers[] | select(.id)')
+          load_balancer_ids=$(echo $load_balancers_json | jq -r '.load_balancers[] | .id')
 
           if [[ -z "$load_balancer_ids" ]]; then
             echo "😉 Nenhum load balancer encontrado para remoção."
