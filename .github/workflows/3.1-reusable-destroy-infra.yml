@@ -79,7 +79,7 @@ jobs:
         run: |
 
           load_balancers_json=$(curl --request GET --url 'https://api.vultr.com/v2/load-balancers' \
-            --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')
+            --header "Authorization: Bearer ${{ secrets.VULTR_API_KEY }}")
           
           if [ "$(echo "$load_balancers_json" | jq '.load_balancers | length')" -eq 0 ]; then
             echo "😉 Não foi encontrado load balancers provisionados no ambiente."
@@ -118,22 +118,22 @@ jobs:
           exit 0 
 
       - name: ⌛ Aguardando alguns segundos antes da execucao do proximo passo
-        run: sleep ${SLEEP_TIME_G}          
+        run: sleep ${SLEEP_TIME_P}          
 
       - name: Clean up Compute instances Vultr Cloud
         run: |
 
-          echo "Remove instancias adicionais criadas pelo processo de auto-scaling do engine vke"
+          echo "Remove instancias adicionais criadas por auto-scaling"
 
           instances_json=$(curl --request GET --url 'https://api.vultr.com/v2/instances' \
-            --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')
-          
+            --header "Authorization: Bearer ${{ secrets.VULTR_API_KEY }}")
+
           if [ "$(echo "$instances_json" | jq '.instances | length')" -eq 0 ]; then
             echo "😉 Não foi encontrado instancias provisionados no ambiente."
             exit 0
           fi
-          
-          instances_ids=$(echo $instances_json | jq -r '.instances_json[] | .id')
+
+          instances_ids=$(echo $instances_json | jq -r '.instances[] | .id')
 
           if [[ -z "$instances_ids" ]]; then
             echo "😉 Nenhuma instancia encontrada para remoção."
