@@ -209,7 +209,8 @@ jobs:
           helm upgrade --install lab-helm-secrets ./modules/helm/secrets/ \
             --namespace ${{ inputs.helm-charts-namespace }} \
             --set awsiam-credencial.aws.accessKeyId=${{ secrets.AWS_ACCESS_KEY_ID }} \
-            --set awsiam-credencial.aws.secretAccessKey=${{ secrets.AWS_SECRET_ACCESS_KEY }}              
+            --set awsiam-credencial.aws.secretAccessKey=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+            --set mockapi-project-secret.mockapiProjectSecret=${{ secrets.MOCKAPI_PROJECT_SECRET }}
          
           echo "✅ Helm charts instalados com sucesso"
           
