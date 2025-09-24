@@ -255,7 +255,7 @@ jobs:
 
           helm dependency build ./modules/helm/newrelic/
 
-          helm upgrade --install newrelic-bundle newrelic/nri-bundle \
+          helm upgrade --install newrelic-bundle ./modules/helm/newrelic/ \
             --namespace ${{ inputs.helm-newrelic-namespace }} \
             --set installCRDs=true \
             --set global.licenseKey=${{ secrets.NEW_RELIC_LICENSE_KEY }}
