@@ -222,7 +222,8 @@ jobs:
             --namespace ${{ inputs.helm-charts-namespace }} \
             --set awsiam-credencial.aws.accessKeyId=${{ secrets.AWS_ACCESS_KEY_ID }} \
             --set awsiam-credencial.aws.secretAccessKey=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
-            --set mockapi-project-secret.mockapiProjectSecret=${{ secrets.MOCKAPI_PROJECT_SECRET }}
+            --set mockapi-project-secret.mockapiProjectSecret=${{ secrets.MOCKAPI_PROJECT_SECRET }} \
+            --set newrelic-license-key.newRelicLicenseKey=${{ secrets.NEW_RELIC_LICENSE_KEY }}
          
           echo "✅ Helm charts instalados com sucesso"
           
