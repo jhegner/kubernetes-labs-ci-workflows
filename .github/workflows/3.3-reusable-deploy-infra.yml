@@ -257,6 +257,7 @@ jobs:
 
           helm upgrade --install newrelic-bundle newrelic/nri-bundle \
             --namespace ${{ inputs.helm-newrelic-namespace }} \
+            --set installCRDs=true \
             --set global.licenseKey=${{ secrets.NEW_RELIC_LICENSE_KEY }}
 
           echo "✅ Helm charts instalados com sucesso"
