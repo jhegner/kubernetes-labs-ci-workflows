@@ -64,43 +64,106 @@ jobs:
     name: 🧹 Clean up cloud resources
     needs: terraform-execute
     runs-on: ubuntu-latest
-    
-    if: ${{ inputs.needs-clean-cloud-resources }}
+
+    env:
+      SLEEP_TIME_P: 1m
+      SLEEP_TIME_M: 2m
+      SLEEP_TIME_G: 3m    
 
     steps:
+
+      - name: ⌛ Aguardando alguns segundos antes da execucao do proximo passo
+        run: sleep ${SLEEP_TIME_P}          
+
       - name: Clean up Load Balancer in Vultr Cloud
         run: |
 
           load_balancers_json=$(curl --request GET --url 'https://api.vultr.com/v2/load-balancers' \
-            --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')
+            --header "Authorization: Bearer ${{ secrets.VULTR_API_KEY }}")
           
           if [ "$(echo "$load_balancers_json" | jq '.load_balancers | length')" -eq 0 ]; then
             echo "😉 Não foi encontrado load balancers provisionados no ambiente."
             exit 0
           fi
           
-          load_balancer_id=$(echo $load_balancers_json | jq -r '.load_balancers[] | select(.label | contains("labs-service-lb")) | .id')
+          load_balancer_ids=$(echo $load_balancers_json | jq -r '.load_balancers[] | .id')
 
-          if [[ -z "$load_balancer_id" ]]; then
-            echo "😉 Não foi encontrado load balancer com label 'labs-service-lb'."
+          if [[ -z "$load_balancer_ids" ]]; then
+            echo "😉 Nenhum load balancer encontrado para remoção."
             exit 0
           fi
 
-          echo "✅ Load balancer encontrado ${load_balancer_id}"
+          echo "✅ Load balancers encontrados:"
+          echo "$load_balancer_ids"
 
-          echo "🔥 Removendo load balancer: ${load_balancer_id}"
+          while read -r load_balancer_id; do
+            
+            echo "---"
+            echo "🔥 Removendo load balancer: ${load_balancer_id}"
 
-          response_code=$(curl --request DELETE -s -o /dev/null -w "%{http_code}" --url "https://api.vultr.com/v2/load-balancers/$load_balancer_id" \
-            --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')
+            response_code=$(curl "https://api.vultr.com/v2/load-balancers/$load_balancer_id" \
+              -X DELETE -H "Authorization: Bearer ${{ secrets.VULTR_API_KEY }}" \
+              -o /dev/null -w "%{http_code}")
 
-          if [ "$response_code" -eq 204 ]; then
-            echo "✅ Load balancer removido com sucesso."
+            if [ "$response_code" -eq 204 ]; then
+              echo "✅ Load balancer ${load_balancer_id} removido com sucesso."
+            else
+              echo "❌ Falha ao remover o load balancer ${load_balancer_id}. Código de resposta: $response_code"
+            fi
+
+          done <<< "$load_balancer_ids"
+
+          echo "---"
+          echo "✅ Processo de remoção de load balancers concluído."
+          exit 0 
+
+      - name: ⌛ Aguardando alguns segundos antes da execucao do proximo passo
+        run: sleep ${SLEEP_TIME_P}          
+
+      - name: Clean up Compute instances Vultr Cloud
+        run: |
+
+          echo "Remove instancias adicionais criadas por auto-scaling"
+
+          instances_json=$(curl --request GET --url 'https://api.vultr.com/v2/instances' \
+            --header "Authorization: Bearer ${{ secrets.VULTR_API_KEY }}")
+
+          if [ "$(echo "$instances_json" | jq '.instances | length')" -eq 0 ]; then
+            echo "😉 Não foi encontrado instancias provisionados no ambiente."
             exit 0
-          else
-            echo "❌ Falha ao remover load balancer."
-            echo "$delete_response"
+          fi
+
+          instances_ids=$(echo $instances_json | jq -r '.instances[] | .id')
+
+          if [[ -z "$instances_ids" ]]; then
+            echo "😉 Nenhuma instancia encontrada para remoção."
             exit 0
-          fi  
+          fi
+
+          echo "✅ Instancias de computacao encontradas:"
+          echo "$instances_ids"
+
+          while read -r instance_id; do
+            
+            echo "---"
+            echo "🔥 Removendo compute instance: ${instance_id}"
+
+            response_code=$(curl "https://api.vultr.com/v2/instances/$instance_id" \
+              -X DELETE -H "Authorization: Bearer ${{ secrets.VULTR_API_KEY }}" \
+              -o /dev/null -w "%{http_code}")
+
+            if [ "$response_code" -eq 204 ]; then
+              echo "✅ Instancia ${instance_id} removida com sucesso."
+            else
+              echo "❌ Falha ao remover instancia ${instance_id}. Código de resposta: $response_code"
+            fi
+
+          done <<< "$instances_ids"
+
+          echo "---"
+          echo "✅ Processo adicional de remoção de instancias de computacao concluído."
+          exit 0 
+
           
 
 
