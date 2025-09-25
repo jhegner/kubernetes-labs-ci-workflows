@@ -15,7 +15,7 @@ on:
         default: "kubernetes-labs-cluster"
       image-tag:
         type: string
-        default: "latest"
+        default: "develop"
         required: false
 
     secrets:
