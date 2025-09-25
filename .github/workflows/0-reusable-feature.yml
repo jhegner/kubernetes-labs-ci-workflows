@@ -49,7 +49,7 @@ jobs:
         run: mvn clean install --no-transfer-progress
 
       - name: 🧪 Lint da imagem com Hadolint
-        uses: tmknom/secure-hadolint-action@v0.4.2
+        uses: tmknom/secure-hadolint-action@bc9a12ff7ee12b95e2a4e43bcb01d86545843688 # v0.4.2
 
       - name: 🔍 Análise Sonar
         if: false
