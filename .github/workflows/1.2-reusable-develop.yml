@@ -17,6 +17,10 @@ on:
         type: string
         default: "develop"
         required: false
+      app-description:
+        type: string
+        default: "Aplicacao do lab ref. kubernetes"
+        required: false
 
     secrets:
       GH_TOKEN:
@@ -47,15 +51,12 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}
-          flavor: |
-            latest=auto
           tags: |
-            type=ref,event=tag
             type=ref,event=branch
-            type=raw,value={{date 'YYYYMMDD'}}
-            type=sha,prefix=
+            type=sha
           labels: |
             org.opencontainers.image.title=${{ inputs.image-name }}
+            org.opencontainers.image.description=${{ inputs.app-description }}
             org.opencontainers.image.created={{date 'YYYY-MM-DD HH:mm:ss'}}
             org.opencontainers.image.revision={{sha}}
 
