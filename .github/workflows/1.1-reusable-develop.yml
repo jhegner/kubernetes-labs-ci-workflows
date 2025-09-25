@@ -82,7 +82,7 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: "${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}:develop"
+          image-ref: "${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}:${{ inputs.image-tag }}"
           format: "table"
           exit-code: "1"
         env:
