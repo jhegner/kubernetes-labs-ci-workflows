@@ -1,0 +1,239 @@
+name: CI/CD Develop Workflow
+
+on:
+  push:
+    branches:
+      - develop
+
+  workflow_call:
+    inputs:
+      image-name:
+        required: true
+        type: string
+      cluster-name:
+        type: string
+        default: "kubernetes-labs-cluster"
+      image-tag:
+        type: string
+        default: "latest"
+
+    secrets:
+      GH_TOKEN:
+        required: true
+      VULTR_API_KEY:
+        required: true
+
+      VULTR_REGISTRY_URN:
+        required: true
+      VULTR_REGISTRY_USERNAME:
+        required: true
+      VULTR_REGISTRY_PASSWORD:
+        required: true
+      VULTR_CONTAINER_REGISTRY_NAME:
+        required: true
+
+jobs:
+  build-container-image:
+    name: 🫙 Build Container Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}.{{patch}}
+            type=sha
+            type=raw,value=${{ inputs.image-name }}
+
+      - name: Log in to Vultr Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}
+          username: ${{ secrets.VULTR_REGISTRY_USERNAME }}
+          password: ${{ secrets.VULTR_REGISTRY_PASSWORD }}
+          logout: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }} # A tag precisa ter o endereco do registry para login e envio senao o docker tenta enviar para o dockerhub
+          labels: ${{ steps.meta.outputs.labels }}
+
+  scan-trivy:
+    name: 🐺 Scan container vulnerability com Trivy
+    runs-on: ubuntu-latest
+    needs: build-container-image
+
+    steps:
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}:${{ inputs.image-tag }}"
+          format: "table"
+          exit-code: "1"
+        env:
+          TRIVY_USERNAME: ${{ secrets.VULTR_REGISTRY_USERNAME }}
+          TRIVY_PASSWORD: ${{ secrets.VULTR_REGISTRY_PASSWORD }}
+
+  deployment:
+    name: ⚙️ Deployment container to kubernetes cluster
+    runs-on: ubuntu-latest
+    needs: scan-trivy
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: 🔍 Consulta clusters provisionados
+        run: |
+
+          clusters_json=$(curl --request GET --url 'https://api.vultr.com/v2/kubernetes/clusters' \
+            --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')
+
+            if [ "$(echo "$clusters_json" | jq '.vke_clusters | length')" -eq 0 ]; then
+              echo "❌ Não foi encontrado clusters provisionados no ambiente."
+              exit 1
+            fi
+
+          cluster_id=$(echo $clusters_json | jq -r '.vke_clusters[] | select(.label | contains("'${{ inputs.cluster-name }}'")) | .id')
+
+          if [[ -z "$cluster_id" ]]; then
+            echo "❌ Não foi encontrado cluster com label 'kubernetes-labs-cluster'."
+            exit 1
+          fi
+
+          echo "✅ Cluster encontrado: $cluster_id"
+
+          echo "CLUSTER_ID=${cluster_id}" >> "$GITHUB_ENV"
+
+      - name: 🔍 Consulta container registries provisionados
+        run: |
+
+          registries_json=$(curl --request GET --url 'https://api.vultr.com/v2/registries' \
+            --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')              
+
+          if [ "$(echo "$registries_json" | jq '.registries | length')" -eq 0 ]; then
+            echo "❌ Não foi encontrado registries provisionados no ambiente."
+            exit 1
+          fi
+
+          registry_id=$(echo $registries_json | jq -r '.registries[] | select(.name | contains("'${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}'")) | .id')
+
+          echo "REGISTRY_ID=${registry_id}" >> "$GITHUB_ENV"
+
+          echo "✅ Registry encontrado: ${REGISTRY_ID}"
+
+      - name: 📥 Consulta dados de acesso ao cluster (kubeconfig)
+        run: |
+
+          config_json=$(curl --request GET --url "https://api.vultr.com/v2/kubernetes/clusters/$CLUSTER_ID/config" \
+            --header 'Authorization: Bearer ${{ secrets.VULTR_API_KEY }}')
+
+          kubeconfig_base64=$(echo "$config_json" | jq -r '.kube_config')
+
+          if [[ "$kubeconfig_base64" == "null" || -z "$kubeconfig_base64" ]]; then
+            echo "❌ Não foi encontrado configuracoes geradas para kubeconfig."
+            exit 1
+          fi
+
+          echo "KUBECONFIG_BASE64=${kubeconfig_base64}" >> "$GITHUB_ENV"                    
+
+          echo "✅ kube_config Base64 obtido com sucesso."
+
+      - name: ⚙️ Configura kubeconfig para acesso ao cluster
+        run: |
+
+          echo "::add-mask::$KUBECONFIG_BASE64"
+
+          mkdir -p ~/.kube
+          echo "${KUBECONFIG_BASE64}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+          echo "✅ Arquivo kubeconfig criado: ~/.kube/config"
+
+          export KUBECONFIG=~/.kube/config
+          source ~/.bashrc
+          echo "✅ Contexto configurado"
+
+          kubectl get nodes
+          echo "✅ Acesso ao cluster verificado com sucesso."
+
+          echo "🎉 Configuração concluída com sucesso!"
+
+      - name: 🔄 Substitui a imagem gerada por template no manifesto
+        run: |
+
+          echo "::add-mask::$KUBECONFIG_BASE64"          
+
+          export IMAGE_NAME="${{ secrets.VULTR_REGISTRY_URN }}/${{ secrets.VULTR_CONTAINER_REGISTRY_NAME }}/${{ inputs.image-name }}"
+          export IMAGE_TAG="${{ inputs.image-tag }}"
+
+          mv infra/kubernetes.yaml infra/kubernetes.yaml.template
+          envsubst < infra/kubernetes.yaml.template > infra/kubernetes.yaml
+
+          echo "✅ Manifesto atualizado com a imagem: $IMAGE_NAME:$IMAGE_TAG"
+
+      - name: 🎯 Deploy dos manifestos
+        run: |
+
+          echo "::add-mask::$KUBECONFIG_BASE64"
+
+          kubectl apply -f infra/kubernetes.yaml
+
+          echo "✅ Manifesto aplicado com sucesso"
+
+  send-notification:
+    name: 📩 Send notification for developers
+    runs-on: ubuntu-latest
+    needs: deployment
+
+    steps:
+      - name: Notificacao Slack
+        # adicionar
+        run: echo "Notificacao sobre deploy enviada no \#Slack com sucesso"
+
+  create-pr:
+    name: 👨‍💻Create PR from develop to main
+    needs: deployment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Pull Request to main
+        shell: bash
+        run: |
+          echo "🔍 Verificando PR de ${{ inputs.source-branch }} para main"
+
+          existing_pr=$(curl -s -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository }}/pulls \
+            | jq '.[] | select(.head.ref == "${{ inputs.source-branch }}" and .base.ref == "main")')
+
+          if [ -n "$existing_pr" ]; then
+            echo "✅ PR já existe. Ignorando..."
+            exit 0
+          fi
+
+          echo "🚀 Criando PR via GitHub API"
+          curl -X POST -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            https://api.github.com/repos/${{ github.repository }}/pulls \
+            -d @- <<EOF
+          {
+            "title": "Auto PR: Merge ${{ inputs.source-branch }} into main",
+            "head": "${{ inputs.source-branch }}",
+            "base": "main",
+            "body": "🤖 PR automático gerado após deploy bem-sucedida."
+          }
+          EOF        
